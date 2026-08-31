@@ -1,0 +1,24 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# node deps for the fast video renderer (installed via `npm install`)
+node_modules/
+package-lock.json
+
+# python
+__pycache__/
+*.pyc
+
+# LibreOffice lock files
+.~lock.*#
+
+# Rendered output under */output/ is COMMITTED on purpose — it is the
+# deliverable your team opens, and they should not need Chrome to see it.
+# Throwaway renders and auditions are not:
+**/_scratch/
+**/_auditions/

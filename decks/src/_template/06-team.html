@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Meridian · deck · team</title>
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+    <link rel="stylesheet" href="../../../brand-kit/brand.css" />
+    <link rel="stylesheet" href="deck.css" />
+    <style>
+      .team {
+        margin-top: 44px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 34px;
+      }
+      .team .avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        margin-bottom: 22px;
+      }
+      /* Initials stand in for headshots. Drop real photos into brand-kit/ and
+         swap this for an <img> when you have them. */
+      .team .avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--mono);
+        font-size: 34px;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+      }
+      .team .who {
+        font-weight: 800;
+        font-size: 27px;
+        letter-spacing: -0.02em;
+        color: var(--fg);
+      }
+      .team .title {
+        margin-top: 8px;
+        font-family: var(--mono);
+        font-size: 14px;
+        letter-spacing: 0.04em;
+        color: var(--accent);
+      }
+      .team .bio {
+        margin-top: 12px;
+        font-weight: 500;
+        font-size: 17px;
+        line-height: 1.45;
+        color: var(--muted);
+      }
+      .backed {
+        margin-top: 52px;
+        font-family: var(--mono);
+        font-size: 18px;
+        letter-spacing: 0.04em;
+        color: var(--faint);
+      }
+      .backed b {
+        color: var(--fg);
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas">
+      <div class="stage">
+        <div class="shead">
+          <div class="logo-lockup"><span class="wordmark">Meridian</span></div>
+          <div class="smeta">
+            <span class="section">Team</span>
+            <span class="page">06</span>
+          </div>
+        </div>
+
+        <div class="sbody">
+          <div class="skicker"><span class="dot"></span>Who is building it</div>
+          <h2 class="stitle">Built by people who <span class="accent">dispatched freight.</span></h2>
+
+          <div class="team">
+            <div>
+              <div class="avatar">SO</div>
+              <div class="who">Sam Okonjo</div>
+              <div class="title">Co-Founder &amp; CEO</div>
+              <div class="bio">Commercial and product. Eight years brokering freight before this.</div>
+            </div>
+            <div>
+              <div class="avatar">AR</div>
+              <div class="who">Ana Ruiz</div>
+              <div class="title">Co-Founder &amp; CTO</div>
+              <div class="bio">Engineering. Built dispatch systems at two logistics companies.</div>
+            </div>
+            <div>
+              <div class="avatar">TV</div>
+              <div class="who">Tom Vance</div>
+              <div class="title">Head of Revenue</div>
+              <div class="bio">Twenty years in transport sales and carrier relationships.</div>
+            </div>
+            <div>
+              <div class="avatar">PN</div>
+              <div class="who">Priya Nair</div>
+              <div class="title">Advisor</div>
+              <div class="bio">Former COO of a national 3PL.</div>
+            </div>
+          </div>
+
+          <div class="backed">Backed by <b>your investors</b> · replace this line</div>
+        </div>
+
+        <div class="sfoot">
+          <span class="note">Team</span>
+          <span class="tagline">One timeline for every load.</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

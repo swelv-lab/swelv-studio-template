@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The check call is a design failure · Meridian</title>
+    <meta name="description" content="Why freight coordination degrades into phone calls, and what changes when every party reads the same timeline." />
+    <link rel="canonical" href="https://meridian.example/blog/starter-essay" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="The check call is a design failure" />
+    <meta property="og:description" content="Why freight coordination degrades into phone calls, and what changes when every party reads the same timeline." />
+    <meta property="og:image" content="https://meridian.example/blog/starter-essay.hero.png" />
+    <meta property="og:url" content="https://meridian.example/blog/starter-essay" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "headline": "The check call is a design failure",
+      "description": "Why freight coordination degrades into phone calls, and what changes when every party reads the same timeline.",
+      "datePublished": "2026-08-31",
+      "dateModified": "2026-08-31",
+      "author": {
+        "@type": "Person",
+        "name": "Sam Okonjo",
+        "jobTitle": "Co-Founder"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Meridian",
+        "url": "https://meridian.example"
+      },
+      "mainEntityOfPage": "https://meridian.example/blog/starter-essay",
+      "image": "https://meridian.example/blog/starter-essay.hero.png",
+      "keywords": "freight operations, coordination"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is a check call?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A phone call placed to a driver or carrier to ask where a load is. Most brokerages make several per load per day, because there is no shared record that answers the question without asking a person."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why not just add tracking?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Tracking answers where the truck is. It does not answer whether the appointment still holds, who was told, or what the shipper was promised. Those live in someone's inbox."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does this replace the dispatcher?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. It removes the part of the job that is retyping what someone already said, which is the part dispatchers like least."
+          }
+        }
+      ]
+    }
+  ]
+}
+    </script>
+    <style>
+/* ============================================================================
+   BRAND KIT · design tokens + primitives
+   ----------------------------------------------------------------------------
+   THIS IS THE ONE FILE THAT MAKES EVERYTHING LOOK LIKE YOU.
+
+   Every post, deck slide, collateral asset, essay and video in this studio
+   links this file. Change a value here and every surface in the repo changes
+   with it. Per-surface layout stays in each file's own <style> block; nothing
+   else should ever redefine a colour or a typeface.
+
+   Not configured yet? Run `/setup-brand` in Claude Code and an agent will
+   interview you and rewrite this file (and BRAND.md) for your brand.
+
+   Shipped values below are the DEMO BRAND — "Meridian", a fictional freight
+   operations company — so a fresh clone renders something good-looking on the
+   first try. Replace them.
+   ========================================================================= */
+
+/* ── 1 · Typefaces ─────────────────────────────────────────────────────────
+   Two families, no more: one sans for everything you read, one mono for
+   kickers, labels, figures and meta. A remote @import is fine for still
+   images (Chrome resolves it during the render). VIDEO capture needs the font
+   files on disk — run brand-kit/fetch-fonts.sh and switch to the @font-face
+   block below it. */
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+:root {
+  /* ── 2 · Surfaces ───────────────────────────────────────────────────────
+     --bg is the signature. Everything else steps up or down from it. Pick a
+     light OR a dark ground and stay there; mixing reads as two brands. */
+  --bg: #f6f3ec; /* the ground — the colour people remember */
+  --panel: #ffffff; /* a raised surface (cards, rows) */
+  --panel-2: #efeae0; /* raised one step further (nested, hovered, active) */
+  --line: #dbd4c6; /* a hairline you are meant to see */
+  --line-soft: #e8e2d7; /* a hairline that only separates */
+
+  /* ── 3 · Ink ────────────────────────────────────────────────────────────
+     Three weights of text, never more. --fg is reserved: headlines and any
+     figure that matters. Muting a number is the fastest way to look cheap. */
+  --fg: #14171a; /* headlines, figures — full strength, never muted */
+  --muted: #4e555c; /* body copy, subheads */
+  --faint: #8a8578; /* kickers, meta, disabled states */
+
+  /* ── 4 · Accent ─────────────────────────────────────────────────────────
+     ONE accent. Not two, not a gradient. It marks the single most important
+     thing on a surface; if it is on three things it marks nothing. */
+  --accent: #0e6b5c; /* the one brand accent */
+  --accent-ink: #ffffff; /* text that sits on top of --accent */
+  --accent-soft: rgba(14, 107, 92, 0.1); /* accent as a wash */
+  --accent-line: rgba(14, 107, 92, 0.34); /* accent as a border */
+
+  /* ── 5 · Status ─────────────────────────────────────────────────────────
+     Meaning colours, not decoration. Each one says exactly one thing, and
+     never appears for any other reason. */
+  --positive: #15803d; /* done, settled, confirmed */
+  --info: #1d4ed8; /* in progress, received, informational */
+  --alert: #c2410c; /* risk, the old way, the thing being fixed */
+  --alert-soft: rgba(194, 65, 12, 0.1);
+  --alert-line: rgba(194, 65, 12, 0.34);
+
+  /* ── 6 · Type stacks ────────────────────────────────────────────────── */
+  --sans: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", "Cascadia Code", Menlo,
+    Consolas, monospace;
+
+  /* ── 7 · Geometry ───────────────────────────────────────────────────────
+     The frame inset and stage padding set the whole studio's sense of air.
+     Bigger = calmer and more premium; smaller = denser and more urgent. */
+  --frame: 40px; /* hairline frame inset from the canvas edge */
+  --pad: 56px; /* content padding inside the frame */
+  --radius: 12px; /* panel corner radius (0 for a hard-edged brand) */
+
+  /* ── 8 · The mark ───────────────────────────────────────────────────────
+     Embedded, not linked: Chrome will not load an external SVG as a mask from
+     a file:// page. Edit brand-kit/logo/mark.svg, then run ./sync-logo.sh to
+     regenerate the line below. --mark-size: 0 turns the mark off entirely. */
+  --mark: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 viewBox=%220 0 100 100%22 fill=%22none%22 aria-label=%22Meridian mark%22%3E %3Ccircle cx=%2250%22 cy=%2250%22 r=%2242%22 stroke=%22currentColor%22 stroke-width=%229%22 /%3E %3Cellipse cx=%2250%22 cy=%2250%22 rx=%2217%22 ry=%2242%22 stroke=%22currentColor%22 stroke-width=%229%22 /%3E %3C/svg%3E");
+}
+
+/* ============================================================================
+   PRIMITIVES — the shared furniture every surface is built from.
+   Rename nothing here: the skills, templates and examples all reference these
+   class names. Restyle them freely.
+   ========================================================================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* The fixed-size artboard. Each surface sets --w / --h for its canvas. */
+.canvas {
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+/* Hairline frame — editorial chrome. Reads as intent, not decoration.
+   Delete this rule for a full-bleed brand. */
+.canvas::after {
+  content: "";
+  position: absolute;
+  inset: var(--frame);
+  border: 1px solid var(--line-soft);
+  pointer-events: none;
+}
+
+/* Content sits inside the frame */
+.stage {
+  position: absolute;
+  inset: var(--frame);
+  padding: var(--pad);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Text primitives ────────────────────────────────────────────────────── */
+
+/* Small uppercase mono line above a headline. Says what kind of thing this is. */
+.kicker {
+  font-family: var(--mono);
+  font-size: 15px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 500;
+}
+
+/* The one big line. line-height stays >= 1.08 — tight tracking plus tight
+   leading cramps a two-line title into a brick. */
+.headline {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 62px;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+}
+.headline .q {
+  display: block;
+}
+
+/* The supporting line. Capped width so it never runs the full canvas. */
+.subhead {
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 21px;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 34ch;
+}
+
+.rule {
+  height: 1px;
+  background: var(--line-soft);
+  width: 100%;
+}
+
+/* Small uppercase pill — an actor, a medium, a category. */
+.tag {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 11px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+/* Slide / slot counter, e.g. 02 / 04 */
+.index {
+  font-family: var(--mono);
+  font-size: 20px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+
+/* ── Identity ───────────────────────────────────────────────────────────── */
+
+/* The lockup: the mark, then the wordmark as live text.
+
+   The mark is painted as a CSS mask from brand-kit/logo/mark.svg, so the SVG
+   lives in exactly ONE place and takes its colour from the surrounding ink.
+   That means the markup for the identity, on every surface in this repo, is:
+
+       <div class="logo-lockup"><span class="wordmark">Meridian</span></div>
+
+   Change the logo once, here, and 200 files follow. Wordmark-only brand? Set
+   --mark-size to 0. Mark-only? Drop the <span>. */
+.logo-lockup {
+  display: flex;
+  align-items: center;
+  gap: 0.2em;
+  font-size: 76px;
+  line-height: 1;
+  color: var(--fg);
+}
+.logo-lockup::before {
+  content: "";
+  flex: none;
+  width: var(--mark-size, 0.84em);
+  height: var(--mark-size, 0.84em);
+  background: currentColor;
+  -webkit-mask: var(--mark) no-repeat center / contain;
+  mask: var(--mark) no-repeat center / contain;
+}
+.logo-lockup .wordmark {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 1em;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: currentColor;
+}
+
+/* The line under the logo. One sentence, identical everywhere, never reworded. */
+.tagline {
+  font-family: var(--mono);
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+
+/* Carousel swipe affordance — replaces the tagline on non-final slides. */
+.swipe {
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 46px;
+  line-height: 1;
+  color: var(--accent);
+}
+
+/* ----------------------------------------------------------------------------
+   Long-form content (blog / essays) styles
+   Editorial furniture + prose, layered on the shared brand kit
+   (brand-kit/brand.css). Image-free by design; the rhythm comes from numbered
+   sections and pull quotes rather than illustration.
+
+   --serif is optional: set it in brand-kit/brand.css if your brand has an
+   editorial serif, otherwise essays render in the brand sans and look fine.
+---------------------------------------------------------------------------- */
+
+:root {
+  --serif: var(--sans);
+  --doc: 720px; /* reading column */
+}
+
+html,
+body {
+  background: var(--bg);
+}
+body {
+  color: var(--muted);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+.doc {
+  max-width: var(--doc);
+  margin: 0 auto;
+  padding: 72px 28px 96px;
+}
+
+/* ── Masthead ─────────────────────────────────────────────────────────────── */
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 500;
+}
+h1.title {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(34px, 5.2vw, 52px);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  color: var(--fg);
+  margin: 18px 0 0;
+}
+.byline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+  margin: 26px 0 0;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  color: var(--faint);
+}
+.byline .who {
+  color: var(--muted);
+}
+.byline .dot {
+  color: var(--line);
+}
+
+/* ── Hero image (the one branded visual) ──────────────────────────────────── */
+.hero {
+  margin: 36px 0 4px;
+}
+.hero img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+
+/* ── Table of contents ────────────────────────────────────────────────────── */
+.toc {
+  margin: 34px 0 10px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.toc ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.toc li {
+  margin: 0;
+}
+.toc a {
+  display: flex;
+  gap: 14px;
+  padding: 9px 2px;
+  font-size: 15px;
+  color: var(--muted);
+  text-decoration: none;
+  border: 0;
+}
+.toc a:hover {
+  color: var(--fg);
+}
+.toc .n {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  padding-top: 2px;
+}
+.toc li + li a {
+  border-top: 1px solid var(--line-soft);
+}
+
+/* ── Article body (prose) ─────────────────────────────────────────────────── */
+.article-body {
+  counter-reset: section;
+  margin-top: 44px;
+  font-size: 16.5px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+.article-body p {
+  margin: 0 0 1.25rem;
+}
+.article-body > h2 {
+  counter-increment: section;
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 27px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  margin: 3.2rem 0 1rem;
+  scroll-margin-top: 24px;
+}
+.article-body > h2::before {
+  content: counter(section, decimal-leading-zero);
+  display: block;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.article-body h3 {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--fg);
+  margin: 1.9rem 0 0.6rem;
+}
+.article-body strong {
+  color: var(--fg);
+  font-weight: 700;
+}
+.article-body a {
+  color: var(--fg);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 1px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.article-body a:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.article-body ul,
+.article-body ol {
+  padding-left: 1.4rem;
+  margin: 0 0 1.25rem;
+}
+.article-body li {
+  margin-bottom: 0.5rem;
+}
+.article-body hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 2.6rem 0;
+}
+
+/* Pull quote — the visual accent that replaces images */
+.article-body blockquote {
+  margin: 2.2rem 0;
+  padding: 4px 0 4px 26px;
+  border-left: 3px solid var(--accent);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 23px;
+  line-height: 1.4;
+  color: var(--fg);
+}
+.article-body blockquote p {
+  margin: 0;
+}
+
+/* Inline data chart (on-brand SVG dropped into the markdown) */
+.article-body figure {
+  margin: 2.2rem 0;
+}
+.article-body figure svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.article-body figcaption {
+  margin-top: 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--faint);
+}
+
+/* ── Step / comparison flow cards (mirror the landing blog CallFlow) ───────── */
+.swf-wrap {
+  margin: 2.6rem 0;
+}
+.swf-lbl {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 0 0 9px;
+}
+.swf-lbl.on {
+  color: var(--accent);
+}
+.swf-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+.swf-row + .swf-lbl {
+  margin-top: 20px;
+}
+.swf-card {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 15px 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.swf-card.accent {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.swf-card.open {
+  border-style: dashed;
+}
+.swf-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+.swf-num.mut {
+  color: var(--faint);
+}
+.swf-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--fg);
+}
+.swf-detail {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+.swf-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  font-size: 17px;
+  padding: 0 1px;
+}
+.swf-arrow.mut {
+  color: var(--line);
+}
+.swf-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.swf-band {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.swf-band.rails {
+  border-color: var(--accent);
+  border-width: 2px;
+}
+.swf-band-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fg);
+}
+.swf-band-meta {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.swf-rails-name {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.swf-logo {
+  display: block;
+  height: 20px;
+  width: auto;
+  color: var(--fg);
+}
+@media (max-width: 640px) {
+  .swf-row {
+    flex-direction: column;
+  }
+  .swf-arrow {
+    transform: rotate(90deg);
+    padding: 2px 0;
+  }
+  .swf-band {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}
+
+/* ── FAQ ──────────────────────────────────────────────────────────────────── */
+.faq {
+  margin: 3.4rem 0 0;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line);
+}
+.faq > h2 {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--fg);
+  margin: 0 0 1.4rem;
+}
+.faq dt {
+  font-weight: 700;
+  color: var(--fg);
+  font-size: 16px;
+  margin-top: 1.4rem;
+}
+.faq dd {
+  margin: 0.5rem 0 0;
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+/* ── CTA + footer ─────────────────────────────────────────────────────────── */
+.cta {
+  margin: 3.4rem 0 0;
+  padding: 28px 26px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  text-align: center;
+}
+.cta p {
+  margin: 0 0 6px;
+  font-family: var(--serif);
+  font-size: 21px;
+  color: var(--fg);
+}
+.cta a {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--accent);
+  text-decoration: none;
+}
+.foot {
+  margin: 48px 0 0;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.foot .logo-lockup {
+  font-size: 26px;
+}
+.foot .tagline {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+@media print {
+  html,
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .doc {
+    padding: 8px 0 0;
+    max-width: none;
+  }
+}
+
+    </style>
+  </head>
+  <body class="article">
+    <article class="doc">
+      <div class="eyebrow">Operations</div>
+      <h1 class="title">The check call is a design failure</h1>
+      <div class="byline"><span class="who">Sam Okonjo</span><span class="dot">·</span><span>Co-Founder</span><span class="dot">·</span><span>31 Aug 2026</span><span class="dot">·</span><span>1 min read</span></div>
+      <figure class="hero"><img src="starter-essay.hero.png" alt="The check call is a design failure"></figure>
+      <nav class="toc" aria-label="Contents"><ol><li><a href="#the-question-nobody-can-answer"><span class="n">01</span><span>The question nobody can answer</span></a></li><li><a href="#what-a-shared-record-changes"><span class="n">02</span><span>What a shared record changes</span></a></li><li><a href="#writing-your-own"><span class="n">03</span><span>Writing your own</span></a></li></ol></nav>
+      <div class="article-body">
+<p>This is the starter essay. Copy this folder, keep the frontmatter fields, and
+replace everything below. It exists so the pipeline has something to render on a
+fresh clone, and so you can see the shape a finished piece takes.</p>
+<h2 id="the-question-nobody-can-answer">The question nobody can answer</h2>
+<p>A load is late. The shipper asks when it will arrive. Answering that takes nine
+phone calls, because the answer is distributed across a driver&rsquo;s memory, a
+dispatcher&rsquo;s notepad, and a spreadsheet somebody updated this morning.</p>
+<blockquote>
+<p>Nobody chose to run freight on phone calls. It accumulated, one workaround at
+a time, and then it was the system.</p>
+</blockquote>
+<p>The calls are not the problem. The calls are what people do when there is no
+shared record, and they will keep doing them for exactly as long as that is
+true.</p>
+<h2 id="what-a-shared-record-changes">What a shared record changes</h2>
+<p>When the carrier marks a stop and the shipper sees it without anyone placing a
+call, the coordination work does not get faster. It stops existing.</p>
+<p>That is the whole argument. Everything else is implementation.</p>
+<h2 id="writing-your-own">Writing your own</h2>
+<p>Read <code>docs/writing-rules.md</code> before you start, especially the ban on the
+antithesis pair, which long-form attracts like nothing else. Then run
+<code>/new-essay</code> and let the studio handle the rest.</p>
+      </div>
+      <section class="faq"><h2>Frequently asked questions</h2><dl><dt>What is a check call?</dt><dd>A phone call placed to a driver or carrier to ask where a load is. Most brokerages make several per load per day, because there is no shared record that answers the question without asking a person.</dd><dt>Why not just add tracking?</dt><dd>Tracking answers where the truck is. It does not answer whether the appointment still holds, who was told, or what the shipper was promised. Those live in someone&#x27;s inbox.</dd><dt>Does this replace the dispatcher?</dt><dd>No. It removes the part of the job that is retyping what someone already said, which is the part dispatchers like least.</dd></dl></section>
+    </article>
+  </body>
+</html>

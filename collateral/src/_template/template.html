@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Meridian · brand asset template</title>
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+    <link rel="stylesheet" href="../../../brand-kit/brand.css" />
+    <style>
+      /* Generic 1200x630 cover/OG template — copy this file to start a new brand asset. */
+      .canvas {
+        --w: 1200px;
+        --h: 630px;
+      }
+      .stage {
+        padding: 64px 68px;
+      }
+      .head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .motto {
+        font-family: var(--sans);
+        font-weight: 900;
+        font-size: 64px;
+        line-height: 1.1;
+        letter-spacing: -0.035em;
+        color: var(--fg);
+      }
+      .motto span {
+        display: block;
+      }
+      .motto .motion {
+        color: var(--accent);
+      }
+      .lede {
+        margin-top: 20px;
+        font-family: var(--sans);
+        font-weight: 500;
+        font-size: 20px;
+        line-height: 1.4;
+        color: var(--muted);
+        max-width: 40ch;
+      }
+      .foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .foot .who {
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        color: var(--faint);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas">
+      <div class="stage">
+        <div class="head">
+          <div class="logo-lockup"><span class="wordmark">Meridian</span></div>
+          <span class="kicker">Brand template</span>
+        </div>
+
+        <div class="main">
+          <h1 class="motto">
+            <span>Capital infrastructure</span>
+            <span class="motion">in motion.</span>
+          </h1>
+          <p class="lede">
+            Swap this headline, kicker, and footer for the asset you're building. The logo
+            lockup, tokens, and canvas mechanic stay as-is.
+          </p>
+        </div>
+
+        <div class="foot">
+          <span class="who">Private capital infrastructure</span>
+          <span class="tagline">One timeline for every load.</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

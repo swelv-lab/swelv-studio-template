@@ -1,0 +1,176 @@
+/* ----------------------------------------------------------------------------
+   Shared slide layout for a pitch deck (16:9, 1920x1080).
+   Each slide HTML links ../../../brand-kit/brand.css then this file, and carries
+   only its own content. Copy the whole _template/ folder to start a new deck;
+   this deck.css travels with it so per-deck tweaks stay local.
+---------------------------------------------------------------------------- */
+
+.canvas {
+  --w: 1920px;
+  --h: 1080px;
+}
+.stage {
+  padding: 92px 104px;
+}
+
+/* Slide chrome: small logo lockup top-left, section + page top-right */
+.shead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.shead .logo-lockup {
+  font-size: 34px;
+}
+.smeta {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+}
+.smeta .section {
+  font-family: var(--mono);
+  font-size: 15px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.smeta .page {
+  font-family: var(--mono);
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+
+/* Body fills the middle; footer pinned to the bottom */
+.sbody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Slide kicker (orange dot + label), title, lead */
+.skicker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 17px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.skicker .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(255, 81, 0, 0.75);
+}
+.stitle {
+  margin-top: 26px;
+  font-family: var(--sans);
+  font-weight: 900;
+  font-size: 88px;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  color: var(--fg);
+  max-width: 22ch;
+}
+.stitle .accent {
+  color: var(--accent);
+}
+.slead {
+  margin-top: 30px;
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 30px;
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: 40ch;
+}
+
+/* A left rail of points (no icon-circles, per brand rules) */
+.points {
+  margin-top: 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  max-width: 46ch;
+}
+.point {
+  display: grid;
+  grid-template-columns: 16px 1fr;
+  column-gap: 22px;
+  align-items: start;
+}
+.point .node {
+  margin-top: 12px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px rgba(255, 81, 0, 0.5);
+}
+.point .t {
+  font-weight: 700;
+  font-size: 30px;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+.point .d {
+  margin-top: 6px;
+  font-weight: 500;
+  font-size: 21px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+/* 3-up stat band, values in full-white ink */
+.statband {
+  margin-top: 46px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  overflow: hidden;
+}
+.statband .cell {
+  padding: 34px 34px;
+  border-right: 1px solid var(--line-soft);
+}
+.statband .cell:last-child {
+  border-right: none;
+}
+.statband .v {
+  font-weight: 900;
+  font-size: 62px;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+.statband .l {
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--faint);
+}
+
+/* Footer band: left note, right tagline */
+.sfoot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+.sfoot .note {
+  font-family: var(--mono);
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  color: var(--faint);
+}
+.sfoot .tagline {
+  text-align: right;
+}

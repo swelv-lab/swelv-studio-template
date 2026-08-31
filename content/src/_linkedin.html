@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      /* The brand kit is inlined by build.py so this card renders standalone. */
+      %%STYLES%%
+      html, body { background: var(--bg); }
+      .card {
+        position: relative;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background: var(--bg) url("%%HERO_SRC%%") center / cover no-repeat;
+        font-family: var(--sans);
+        font-weight: 500;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: geometricPrecision;
+      }
+      /* Neutral bottom backdrop so the copy reads over busy imagery — dark, not
+         blue, so it looks like a soft shadow rather than a wash over the hero. */
+      .scrim {
+        position: absolute; inset: 0;
+        background: linear-gradient(
+          180deg,
+          transparent 34%,
+          rgba(0, 0, 0, 0.28) 50%,
+          rgba(0, 0, 0, 0.68) 100%
+        );
+      }
+      .frame {
+        position: absolute; inset: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        pointer-events: none;
+      }
+      .inner {
+        position: absolute; inset: 28px;
+        padding: 46px 54px;
+        display: flex; flex-direction: column; justify-content: space-between;
+      }
+      .logo-lockup { font-size: 30px; align-self: flex-start; color: var(--fg); }
+      /* No scrim: keep the hero image clean; a soft text shadow carries legibility. */
+      .foot {
+        display: flex; flex-direction: column;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 2px 18px rgba(0, 0, 0, 0.5);
+      }
+      .eyebrow {
+        font-family: var(--mono);
+        font-size: 17px; font-weight: 500;
+        letter-spacing: 0.22em; text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 20px;
+      }
+      .title {
+        font-family: var(--sans);
+        font-weight: 900;
+        font-size: 54px; line-height: 1.02; letter-spacing: -0.03em;
+        color: #fff;
+        max-width: 20ch;
+      }
+      .desc {
+        margin-top: 22px;
+        font-size: 21px; font-weight: 500; line-height: 1.45;
+        color: var(--muted);
+        max-width: 46ch;
+      }
+      .cta {
+        margin-top: 30px;
+        display: flex; align-items: center; gap: 14px;
+      }
+      .cta .read {
+        display: inline-flex; align-items: center; gap: 9px;
+        font-size: 17px; font-weight: 700; color: #fff;
+      }
+      .cta .read .arrow { color: var(--accent); font-size: 20px; line-height: 1; }
+      .cta .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--faint); }
+      .cta .url {
+        font-family: var(--mono); font-size: 15px; letter-spacing: 0.01em;
+        color: var(--faint);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="scrim"></div>
+      <div class="frame"></div>
+      <div class="inner">
+        <div class="logo-lockup"><span class="wordmark">%%WORDMARK%%</span></div>
+        <div class="foot">
+          <div class="eyebrow">%%EYEBROW%%</div>
+          <div class="title">%%TITLE%%</div>
+          <div class="desc">%%DESC%%</div>
+          <div class="cta">
+            <span class="read">Read the full piece <span class="arrow">&#8594;</span></span>
+            <span class="dot"></span>
+            <span class="url">%%BLOGLABEL%%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,241 @@
+/* ============================================================================
+   BRAND KIT · design tokens + primitives
+   ----------------------------------------------------------------------------
+   THIS IS THE ONE FILE THAT MAKES EVERYTHING LOOK LIKE YOU.
+
+   Every post, deck slide, collateral asset, essay and video in this studio
+   links this file. Change a value here and every surface in the repo changes
+   with it. Per-surface layout stays in each file's own <style> block; nothing
+   else should ever redefine a colour or a typeface.
+
+   Not configured yet? Run `/setup-brand` in Claude Code and an agent will
+   interview you and rewrite this file (and BRAND.md) for your brand.
+
+   Shipped values below are the DEMO BRAND — "Meridian", a fictional freight
+   operations company — so a fresh clone renders something good-looking on the
+   first try. Replace them.
+   ========================================================================= */
+
+/* ── 1 · Typefaces ─────────────────────────────────────────────────────────
+   Two families, no more: one sans for everything you read, one mono for
+   kickers, labels, figures and meta. A remote @import is fine for still
+   images (Chrome resolves it during the render). VIDEO capture needs the font
+   files on disk — run brand-kit/fetch-fonts.sh and switch to the @font-face
+   block below it. */
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+:root {
+  /* ── 2 · Surfaces ───────────────────────────────────────────────────────
+     --bg is the signature. Everything else steps up or down from it. Pick a
+     light OR a dark ground and stay there; mixing reads as two brands. */
+  --bg: #f6f3ec; /* the ground — the colour people remember */
+  --panel: #ffffff; /* a raised surface (cards, rows) */
+  --panel-2: #efeae0; /* raised one step further (nested, hovered, active) */
+  --line: #dbd4c6; /* a hairline you are meant to see */
+  --line-soft: #e8e2d7; /* a hairline that only separates */
+
+  /* ── 3 · Ink ────────────────────────────────────────────────────────────
+     Three weights of text, never more. --fg is reserved: headlines and any
+     figure that matters. Muting a number is the fastest way to look cheap. */
+  --fg: #14171a; /* headlines, figures — full strength, never muted */
+  --muted: #4e555c; /* body copy, subheads */
+  --faint: #8a8578; /* kickers, meta, disabled states */
+
+  /* ── 4 · Accent ─────────────────────────────────────────────────────────
+     ONE accent. Not two, not a gradient. It marks the single most important
+     thing on a surface; if it is on three things it marks nothing. */
+  --accent: #0e6b5c; /* the one brand accent */
+  --accent-ink: #ffffff; /* text that sits on top of --accent */
+  --accent-soft: rgba(14, 107, 92, 0.1); /* accent as a wash */
+  --accent-line: rgba(14, 107, 92, 0.34); /* accent as a border */
+
+  /* ── 5 · Status ─────────────────────────────────────────────────────────
+     Meaning colours, not decoration. Each one says exactly one thing, and
+     never appears for any other reason. */
+  --positive: #15803d; /* done, settled, confirmed */
+  --info: #1d4ed8; /* in progress, received, informational */
+  --alert: #c2410c; /* risk, the old way, the thing being fixed */
+  --alert-soft: rgba(194, 65, 12, 0.1);
+  --alert-line: rgba(194, 65, 12, 0.34);
+
+  /* ── 6 · Type stacks ────────────────────────────────────────────────── */
+  --sans: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", "Cascadia Code", Menlo,
+    Consolas, monospace;
+
+  /* ── 7 · Geometry ───────────────────────────────────────────────────────
+     The frame inset and stage padding set the whole studio's sense of air.
+     Bigger = calmer and more premium; smaller = denser and more urgent. */
+  --frame: 40px; /* hairline frame inset from the canvas edge */
+  --pad: 56px; /* content padding inside the frame */
+  --radius: 12px; /* panel corner radius (0 for a hard-edged brand) */
+
+  /* ── 8 · The mark ───────────────────────────────────────────────────────
+     Embedded, not linked: Chrome will not load an external SVG as a mask from
+     a file:// page. Edit brand-kit/logo/mark.svg, then run ./sync-logo.sh to
+     regenerate the line below. --mark-size: 0 turns the mark off entirely. */
+  --mark: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 viewBox=%220 0 100 100%22 fill=%22none%22 aria-label=%22Meridian mark%22%3E %3Ccircle cx=%2250%22 cy=%2250%22 r=%2242%22 stroke=%22currentColor%22 stroke-width=%229%22 /%3E %3Cellipse cx=%2250%22 cy=%2250%22 rx=%2217%22 ry=%2242%22 stroke=%22currentColor%22 stroke-width=%229%22 /%3E %3C/svg%3E");
+}
+
+/* ============================================================================
+   PRIMITIVES — the shared furniture every surface is built from.
+   Rename nothing here: the skills, templates and examples all reference these
+   class names. Restyle them freely.
+   ========================================================================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* The fixed-size artboard. Each surface sets --w / --h for its canvas. */
+.canvas {
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+/* Hairline frame — editorial chrome. Reads as intent, not decoration.
+   Delete this rule for a full-bleed brand. */
+.canvas::after {
+  content: "";
+  position: absolute;
+  inset: var(--frame);
+  border: 1px solid var(--line-soft);
+  pointer-events: none;
+}
+
+/* Content sits inside the frame */
+.stage {
+  position: absolute;
+  inset: var(--frame);
+  padding: var(--pad);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Text primitives ────────────────────────────────────────────────────── */
+
+/* Small uppercase mono line above a headline. Says what kind of thing this is. */
+.kicker {
+  font-family: var(--mono);
+  font-size: 15px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 500;
+}
+
+/* The one big line. line-height stays >= 1.08 — tight tracking plus tight
+   leading cramps a two-line title into a brick. */
+.headline {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 62px;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+}
+.headline .q {
+  display: block;
+}
+
+/* The supporting line. Capped width so it never runs the full canvas. */
+.subhead {
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 21px;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 34ch;
+}
+
+.rule {
+  height: 1px;
+  background: var(--line-soft);
+  width: 100%;
+}
+
+/* Small uppercase pill — an actor, a medium, a category. */
+.tag {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 5px 11px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+/* Slide / slot counter, e.g. 02 / 04 */
+.index {
+  font-family: var(--mono);
+  font-size: 20px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+
+/* ── Identity ───────────────────────────────────────────────────────────── */
+
+/* The lockup: the mark, then the wordmark as live text.
+
+   The mark is painted as a CSS mask from brand-kit/logo/mark.svg, so the SVG
+   lives in exactly ONE place and takes its colour from the surrounding ink.
+   That means the markup for the identity, on every surface in this repo, is:
+
+       <div class="logo-lockup"><span class="wordmark">Meridian</span></div>
+
+   Change the logo once, here, and 200 files follow. Wordmark-only brand? Set
+   --mark-size to 0. Mark-only? Drop the <span>. */
+.logo-lockup {
+  display: flex;
+  align-items: center;
+  gap: 0.2em;
+  font-size: 76px;
+  line-height: 1;
+  color: var(--fg);
+}
+.logo-lockup::before {
+  content: "";
+  flex: none;
+  width: var(--mark-size, 0.84em);
+  height: var(--mark-size, 0.84em);
+  background: currentColor;
+  -webkit-mask: var(--mark) no-repeat center / contain;
+  mask: var(--mark) no-repeat center / contain;
+}
+.logo-lockup .wordmark {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 1em;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: currentColor;
+}
+
+/* The line under the logo. One sentence, identical everywhere, never reworded. */
+.tagline {
+  font-family: var(--mono);
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+
+/* Carousel swipe affordance — replaces the tagline on non-final slides. */
+.swipe {
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 46px;
+  line-height: 1;
+  color: var(--accent);
+}

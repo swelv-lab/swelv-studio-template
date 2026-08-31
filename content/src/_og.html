@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Hero card</title>
+    <style>
+      /* The brand kit is inlined by build.py (%%STYLES%%) so this card renders
+         standalone from the output folder. Layout only below it. */
+      %%STYLES%%
+
+      .card {
+        position: relative;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+      }
+      .card::after {
+        content: "";
+        position: absolute;
+        inset: 28px;
+        border: 1px solid var(--line-soft);
+        pointer-events: none;
+      }
+      .stage {
+        position: absolute;
+        inset: 56px 64px;
+        display: flex;
+        flex-direction: column;
+      }
+      .eyebrow {
+        font-family: var(--mono);
+        font-size: 17px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--accent);
+        font-weight: 500;
+      }
+      .mid {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .title {
+        font-family: var(--sans);
+        font-weight: 700;
+        font-size: 58px;
+        line-height: 1.12;
+        letter-spacing: -0.025em;
+        color: var(--fg);
+        max-width: 20ch;
+      }
+      .foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .foot .logo-lockup {
+        font-size: 34px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="stage">
+        <div class="eyebrow">%%EYEBROW%%</div>
+        <div class="mid"><div class="title">%%TITLE%%</div></div>
+        <div class="foot">
+          <div class="logo-lockup"><span class="wordmark">%%WORDMARK%%</span></div>
+          <span class="tagline">%%TAGLINE%%</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

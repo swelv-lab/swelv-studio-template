@@ -1,0 +1,17 @@
+{
+  "_comment": "The brand's WORDS, for the places that need them in code (the essay builder, share cards, structured data). brand.css holds the look; this holds the strings. /setup-brand fills both.",
+
+  "name": "Meridian",
+  "wordmark": "Meridian",
+  "tagline": "One timeline for every load.",
+
+  "url": "https://meridian.example",
+  "blogPath": "/blog",
+  "blogLabel": "meridian.example/blog",
+  "sectionLabel": "Insights",
+
+  "ctaText": "See what one timeline looks like.",
+  "ctaHref": "https://meridian.example",
+
+  "defaultHashtag": "#Freight"
+}

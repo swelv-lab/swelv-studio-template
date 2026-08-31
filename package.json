@@ -1,0 +1,10 @@
+{
+  "name": "swelv-studio",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Optional tooling for fast video rendering. Run `npm install` once to enable the persistent-browser MP4 renderer; everything else needs only Chrome (plus ImageMagick for decks and essays, ffmpeg for video).",
+  "dependencies": {
+    "puppeteer-core": "^24.0.0"
+  }
+}

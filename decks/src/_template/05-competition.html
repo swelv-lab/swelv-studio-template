@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Meridian · deck · competition</title>
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+    <link rel="stylesheet" href="../../../brand-kit/brand.css" />
+    <link rel="stylesheet" href="deck.css" />
+    <style>
+      /* Positioning table — how funds operate today vs one integrated system.
+         Forward-looking framing: say what you unify, never what a competitor does badly. */
+      .compare {
+        margin-top: 40px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+        background: var(--panel);
+      }
+      .compare .row {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr 1fr 1fr;
+        border-bottom: 1px solid var(--line-soft);
+      }
+      .compare .row:last-child {
+        border-bottom: none;
+      }
+      .compare .row.head .cell {
+        font-family: var(--mono);
+        font-size: 15px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--faint);
+        padding-top: 26px;
+        padding-bottom: 26px;
+      }
+      .compare .cell {
+        padding: 24px 28px;
+        font-weight: 500;
+        font-size: 21px;
+        color: var(--muted);
+        border-right: 1px solid var(--line-soft);
+      }
+      .compare .cell:last-child {
+        border-right: none;
+      }
+      .compare .cell.label {
+        font-weight: 700;
+        color: var(--fg);
+      }
+      /* Your column reads as the answer */
+      .compare .row.head .cell.mine {
+        color: var(--accent);
+      }
+      .compare .cell.mine {
+        color: var(--fg);
+        font-weight: 700;
+        background: rgba(255, 81, 0, 0.06);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas">
+      <div class="stage">
+        <div class="shead">
+          <div class="logo-lockup"><span class="wordmark">Meridian</span></div>
+          <div class="smeta">
+            <span class="section">Landscape</span>
+            <span class="page">05</span>
+          </div>
+        </div>
+
+        <div class="sbody">
+          <div class="skicker"><span class="dot"></span>How brokers operate today</div>
+          <h2 class="stitle">One system, not <span class="accent">five tools.</span></h2>
+
+          <div class="compare">
+            <div class="row head">
+              <div class="cell">Capability</div>
+              <div class="cell">Calls + a shared sheet</div>
+              <div class="cell">Point tools</div>
+              <div class="cell mine">Meridian</div>
+            </div>
+            <div class="row">
+              <div class="cell label">One record all parties see</div>
+              <div class="cell">By hand</div>
+              <div class="cell">Separate</div>
+              <div class="cell mine">Built in</div>
+            </div>
+            <div class="row">
+              <div class="cell label">Status updates</div>
+              <div class="cell">Manual</div>
+              <div class="cell">Manual</div>
+              <div class="cell mine">Automatic</div>
+            </div>
+            <div class="row">
+              <div class="cell label">Exception alerts</div>
+              <div class="cell">Manual</div>
+              <div class="cell">Varies</div>
+              <div class="cell mine">Automatic</div>
+            </div>
+            <div class="row">
+              <div class="cell label">Shipper visibility</div>
+              <div class="cell">On request</div>
+              <div class="cell">Add-on</div>
+              <div class="cell mine">Built in</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sfoot">
+          <span class="note">Landscape</span>
+          <span class="tagline">One timeline for every load.</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
