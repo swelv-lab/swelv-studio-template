@@ -3,7 +3,7 @@ title: The check call is a design failure
 slug: starter-essay
 kind: article
 eyebrow: Operations
-deck: Nine phone calls to answer one question is not a people problem. It is a missing shared record.
+deck: Nine phone calls to answer one question, and none of them produces new information. What changes when every party reads the same record.
 description: Why freight coordination degrades into phone calls, and what changes when every party reads the same timeline.
 author: Sam Okonjo
 role: Co-Founder
@@ -33,9 +33,9 @@ dispatcher's notepad, and a spreadsheet somebody updated this morning.
 > Nobody chose to run freight on phone calls. It accumulated, one workaround at
 > a time, and then it was the system.
 
-The calls are not the problem. The calls are what people do when there is no
-shared record, and they will keep doing them for exactly as long as that is
-true.
+Dispatchers make those calls because there is no shared record, and they will
+keep making them for exactly as long as that stays true. Nine calls is what
+reconstructing a known fact costs, repeated all day.
 
 ## What a shared record changes
 

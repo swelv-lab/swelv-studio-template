@@ -5,22 +5,45 @@
     <style>
       /* The brand kit is inlined by build.py so this card renders standalone. */
       %%STYLES%%
-      html, body { background: var(--bg); }
+
+      /* ---------------------------------------------------------------------
+         The social share card — the image you upload in place of the platform's
+         automatic link preview.
+
+         Two modes, set by build.py from the frontmatter:
+
+           .plain  no heroImage — a standalone branded card on the brand ground.
+                   This is the default, and it is always legible.
+           .photo  heroImage supplied — the image fills the card, a neutral
+                   gradient carries the copy, and the type goes white.
+
+         The modes exist because overlaying this copy on the generated hero card
+         renders the title twice. If you set a heroImage, use a real photo or
+         illustration, never another card.
+      --------------------------------------------------------------------- */
+      html,
+      body {
+        background: var(--bg);
+      }
       .card {
         position: relative;
         width: 1200px;
         height: 630px;
         overflow: hidden;
-        background: var(--bg) url("%%HERO_SRC%%") center / cover no-repeat;
+        background: var(--bg);
         font-family: var(--sans);
-        font-weight: 500;
         -webkit-font-smoothing: antialiased;
         text-rendering: geometricPrecision;
       }
-      /* Neutral bottom backdrop so the copy reads over busy imagery — dark, not
-         blue, so it looks like a soft shadow rather than a wash over the hero. */
+      .card.photo {
+        background: var(--bg) url("%%HERO_SRC%%") center / cover no-repeat;
+      }
+
+      /* Photo mode only: a neutral, non-tinted backdrop under the copy. */
       .scrim {
-        position: absolute; inset: 0;
+        display: none;
+        position: absolute;
+        inset: 0;
         background: linear-gradient(
           180deg,
           transparent 34%,
@@ -28,60 +51,117 @@
           rgba(0, 0, 0, 0.68) 100%
         );
       }
+      .card.photo .scrim {
+        display: block;
+      }
+
       .frame {
-        position: absolute; inset: 28px;
-        border: 1px solid rgba(255, 255, 255, 0.14);
+        position: absolute;
+        inset: 28px;
+        border: 1px solid var(--line-soft);
         pointer-events: none;
       }
-      .inner {
-        position: absolute; inset: 28px;
-        padding: 46px 54px;
-        display: flex; flex-direction: column; justify-content: space-between;
+      .card.photo .frame {
+        border-color: rgba(255, 255, 255, 0.14);
       }
-      .logo-lockup { font-size: 30px; align-self: flex-start; color: var(--fg); }
-      /* No scrim: keep the hero image clean; a soft text shadow carries legibility. */
-      .foot {
-        display: flex; flex-direction: column;
+
+      .inner {
+        position: absolute;
+        inset: 28px;
+        padding: 46px 54px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        color: var(--fg);
+      }
+      .card.photo .inner {
+        color: #fff;
         text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 2px 18px rgba(0, 0, 0, 0.5);
+      }
+
+      .logo-lockup {
+        font-size: 30px;
+        align-self: flex-start;
+        color: currentColor;
+      }
+
+      .foot {
+        display: flex;
+        flex-direction: column;
       }
       .eyebrow {
         font-family: var(--mono);
-        font-size: 17px; font-weight: 500;
-        letter-spacing: 0.22em; text-transform: uppercase;
+        font-size: 17px;
+        font-weight: 500;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
         color: var(--accent);
         margin-bottom: 20px;
       }
+      .card.photo .eyebrow {
+        color: #fff;
+      }
       .title {
         font-family: var(--sans);
-        font-weight: 900;
-        font-size: 54px; line-height: 1.02; letter-spacing: -0.03em;
-        color: #fff;
+        font-weight: 700;
+        font-size: 54px;
+        line-height: 1.08;
+        letter-spacing: -0.03em;
+        color: currentColor;
         max-width: 20ch;
       }
       .desc {
         margin-top: 22px;
-        font-size: 21px; font-weight: 500; line-height: 1.45;
+        font-size: 21px;
+        font-weight: 400;
+        line-height: 1.45;
         color: var(--muted);
         max-width: 46ch;
       }
+      .card.photo .desc {
+        color: rgba(255, 255, 255, 0.88);
+      }
       .cta {
         margin-top: 30px;
-        display: flex; align-items: center; gap: 14px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
       }
       .cta .read {
-        display: inline-flex; align-items: center; gap: 9px;
-        font-size: 17px; font-weight: 700; color: #fff;
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 17px;
+        font-weight: 700;
+        color: currentColor;
       }
-      .cta .read .arrow { color: var(--accent); font-size: 20px; line-height: 1; }
-      .cta .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--faint); }
+      .cta .read .arrow {
+        color: var(--accent);
+        font-size: 20px;
+        line-height: 1;
+      }
+      .card.photo .cta .read .arrow {
+        color: #fff;
+      }
+      .cta .dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--faint);
+      }
       .cta .url {
-        font-family: var(--mono); font-size: 15px; letter-spacing: 0.01em;
+        font-family: var(--mono);
+        font-size: 15px;
+        letter-spacing: 0.01em;
         color: var(--faint);
+      }
+      .card.photo .cta .url {
+        color: rgba(255, 255, 255, 0.78);
       }
     </style>
   </head>
   <body>
-    <div class="card">
+    <div class="card %%MODE%%">
       <div class="scrim"></div>
       <div class="frame"></div>
       <div class="inner">

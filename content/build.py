@@ -145,6 +145,7 @@ li_hero = os.path.basename(str(hero_custom)) if hero_custom else f"{slug}.hero.p
 li = open(os.path.join(here, "src", "_linkedin.html"), encoding="utf-8").read()
 for k, v in {
     "STYLES": brand_css,
+    "MODE": "photo" if hero_custom else "plain",
     "HERO_SRC": esc(li_hero),
     "SECTION": esc(brand.get("sectionLabel", "Insights")),
     "EYEBROW": esc(f"{brand.get('sectionLabel', 'Insights')} · {eyebrow}" if eyebrow else brand.get("sectionLabel", "Insights")),
