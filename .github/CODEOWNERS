@@ -1,0 +1,6 @@
+# Every file in this repository requires review from the owner before merging.
+#
+# This works together with the branch protection on main: a pull request cannot
+# be merged until a CODEOWNER has approved it. Adding a path here would narrow
+# that; the catch-all is deliberate.
+*                       @manuelbenitez
