@@ -53,7 +53,7 @@ is a solved problem and not the interesting bit.
 You need [Claude Code](https://code.claude.com/docs), `git`, and Google Chrome.
 
 ```bash
-git clone https://github.com/swelv-lab/studio.git
+git clone https://github.com/swelv-lab/swelv-studio-template.git
 cd studio
 claude
 ```
