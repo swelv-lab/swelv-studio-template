@@ -176,6 +176,46 @@ for t in 1 5 9 11.5; do ffmpeg -y -ss $t -i "$V" -frames:v 1 /tmp/out-$t.png 2>/
 shows act by act, the sound map, and the file path — and offer, never assume, to
 upload.
 
+## Master size — pick by where it will be watched, and resist 4K
+
+Frames rasterise at `RENDER_SCALE` times the CSS viewport. The layout never
+changes; only the pixel grid under it does.
+
+| Where it goes | Set | Master |
+| --- | --- | --- |
+| Square social posts | nothing | 1080×1080 |
+| Feed video, client demos, anything delivered as a file | nothing | 1920×1080 |
+| Embedded in a web player with a full-screen button | `RENDER_SCALE=4/3` | 2560×1440 |
+
+**1920×1080 is the default and is the right answer for almost every video.**
+Phones, tablets and laptops never show more than that, and a smaller file is a
+feature when it is going in a feed or an email.
+
+**Do not render video at 2×.** This is the single most tempting mistake here,
+because every *still* pipeline in this repo renders at 2× — and there, it is
+correct: a still costs one screenshot, and the extra pixels are nearly free. A
+video costs one screenshot per frame. At 2× a three-minute film is 5,400
+rasterises at four times the area, which turns a few minutes of rendering into
+most of an hour, and produces a 4K master for a 900px embed. The trade runs the
+opposite way to a still.
+
+So: **2× for stills, 1× for video**, and the one exception is a film that will be
+watched full-screen on a 1440p or 4K monitor, where a 1920 master has no headroom
+and small mono labels go soft. `4/3` lands exactly on 1440p for roughly 60% more
+bitrate; 2× costs about 150% more for detail nobody will see.
+
+```bash
+./render-video.sh <html> 1920 1080 <frames> <fps>                 # the default
+RENDER_SCALE=4/3 ./render-video.sh <html> 1920 1080 <frames> <fps> # site embed
+```
+
+The `1920 1080` arguments are CSS pixels and stay the same either way — the
+scale is what moves.
+
+**If a video has an ender or any clip concatenated onto it, the two must match
+in dimensions.** The concat is a stream copy, not a re-encode, so mixing a
+1920 film with a 2560 ender fails outright.
+
 ## Traps (every one of these has actually happened)
 
 - **A remote `@import` font does not load during frame capture.** Frames render

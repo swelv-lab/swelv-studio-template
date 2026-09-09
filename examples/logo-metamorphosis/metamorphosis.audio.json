@@ -1,0 +1,49 @@
+{
+  "_comment": "Sound for the 8.5s story. Two worlds, each with its own voice. There is no narration over this, so the cues carry the whole thing — but they still mark events rather than perform. Times are absolute seconds on the same clock as window.seek(t) in metamorphosis.html; change one, change both.",
+  "seed": 20260909,
+  "cues": [
+    { "_": "── 1 · a pen on paper. A nib scratch is a short band of noise, so the word is written with one whoosh per pen stroke rather than one per letter. Twelve strokes: s, w, e, l.",
+      "type": "whoosh", "time": 0.00, "dur": 1.40, "gain": 0.055 },
+
+    { "type": "whoosh", "time": 0.38, "dur": 0.13, "gain": 0.115 },
+    { "type": "whoosh", "time": 0.53, "dur": 0.11, "gain": 0.110 },
+    { "type": "whoosh", "time": 0.66, "dur": 0.10, "gain": 0.105 },
+
+    { "type": "whoosh", "time": 0.84, "dur": 0.12, "gain": 0.115 },
+    { "type": "whoosh", "time": 0.97, "dur": 0.10, "gain": 0.105 },
+    { "type": "whoosh", "time": 1.10, "dur": 0.11, "gain": 0.110 },
+    { "type": "whoosh", "time": 1.22, "dur": 0.09, "gain": 0.100 },
+
+    { "type": "whoosh", "time": 1.40, "dur": 0.12, "gain": 0.115 },
+    { "type": "whoosh", "time": 1.52, "dur": 0.10, "gain": 0.105 },
+    { "type": "whoosh", "time": 1.64, "dur": 0.11, "gain": 0.110 },
+
+    { "type": "whoosh", "time": 1.84, "dur": 0.16, "gain": 0.120 },
+    { "type": "whoosh", "time": 1.96, "dur": 0.09, "gain": 0.100 },
+
+    { "_": "the V, drawn in one stroke, then its swell, then the nib lifts",
+      "type": "whoosh", "time": 2.15, "dur": 0.28, "gain": 0.110 },
+    { "type": "whoosh", "time": 2.34, "dur": 0.24, "gain": 0.100 },
+    { "type": "tone",   "time": 2.46, "freq": 587.33, "dur": 0.22, "gain": 0.045 },
+    { "type": "whoosh", "time": 2.55, "dur": 0.32, "gain": 0.090 },
+
+    { "_": "── 2 · 1984. The tube charges, then a gated stab on the ignition, a D-A-D arpeggio over it, and a detuned pad humming underneath like a neon transformer.",
+      "type": "whoosh", "time": 3.10, "dur": 1.30, "gain": 0.060 },
+
+    { "type": "drop",  "time": 4.30, "f0": 220, "f1": 73.42, "dur": 0.26, "gain": 0.130 },
+    { "type": "drop",  "time": 4.36, "f0": 330, "f1": 146.83, "dur": 0.18, "gain": 0.085 },
+
+    { "type": "bell",  "time": 4.40, "freq": 146.83, "dur": 0.50, "gain": 0.048 },
+    { "type": "bell",  "time": 4.50, "freq": 220.00, "dur": 0.50, "gain": 0.044 },
+    { "type": "bell",  "time": 4.60, "freq": 293.66, "dur": 0.50, "gain": 0.040 },
+    { "type": "bell",  "time": 4.70, "freq": 440.00, "dur": 0.50, "gain": 0.036 },
+    { "type": "bell",  "time": 4.80, "freq": 587.33, "dur": 0.50, "gain": 0.032 },
+
+    { "type": "synth", "time": 4.45, "freq": 73.42,  "dur": 1.90, "gain": 0.040, "attack": 0.30, "release": 0.90 },
+    { "type": "pad",   "time": 4.60, "freq": 146.83, "dur": 1.50, "gain": 0.026, "attack": 0.28, "release": 0.80 },
+
+    { "_": "── 3 · it cools. Everything drains out. No resolve here: the ender does that, and the last half-second before the handoff is silent.",
+      "type": "whoosh", "time": 6.62, "dur": 1.10, "gain": 0.040 },
+    { "type": "drop",  "time": 7.42, "f0": 260, "f1": 110, "dur": 0.30, "gain": 0.060 }
+  ]
+}

@@ -17,6 +17,16 @@
 #   ./render-video.sh src/linkedin/distributions/distributions-one-transfer-video.html
 #   ./render-video.sh <html> [W] [H] [FRAMES] [FPS] [READ_HOLD] [END_HOLD] [READ_T]
 #
+# W/H are CSS pixels. Frames rasterise at RENDER_SCALE times that (default 1):
+#
+#   ./render-video.sh <html> 1920 1080 ...              # 1920x1080 — the default
+#   RENDER_SCALE=4/3 ./render-video.sh <html> 1920 1080 # 2560x1440, for a
+#                                                       # full-screen web player
+#
+# Do not reach for 2. Video at 2x doubles the render time and the file for
+# detail nobody watching in a feed will ever see; that is the opposite trade to
+# a still, where 2x is cheap and worth it. See the new-video skill.
+#
 # Output: output/<same path>/<name>.mp4. Needs google-chrome-stable + ffmpeg.
 # For a looping GIF instead (lighter, seamless loop), use render-gif.sh.
 # ---------------------------------------------------------------------------
@@ -32,6 +42,11 @@ w="${2:-1080}"; h="${3:-1350}"; frames="${4:-270}"; fps="${5:-30}"
 # READ_HOLD is EXTRA pause on top of the reveal — keep it small (the reveal already
 # gives ~2.5s of readable still time); only bump it for genuinely wordy posts.
 read_hold="${6:-0}"; end_hold="${7:-2}"; read_t="${8:-0.24}"
+
+# x264 preset. veryslow is right for a 9-second post, where the encode is
+# seconds and the file lands in a feed. For a long piece (an explainer, a
+# narrated walkthrough) it dominates the render, so:  PRESET=medium ./render-video.sh …
+preset="${PRESET:-veryslow}"
 
 chrome="$(command -v google-chrome-stable || command -v google-chrome || command -v chromium || true)"
 [ -z "$chrome" ] && { echo "no chrome binary found" >&2; exit 1; }
@@ -59,7 +74,7 @@ else
     t="$(awk "BEGIN{printf \"%.5f\", $k/$last}")"
     n="$(printf '%04d' "$k")"
     "$chrome" --headless=new --no-sandbox --disable-gpu --hide-scrollbars \
-      --force-color-profile=srgb --force-device-scale-factor=1 \
+      --force-color-profile=srgb --force-device-scale-factor="${RENDER_SCALE:-1}" \
       --window-size="${w},${h}" --virtual-time-budget=8000 \
       --screenshot="$tmp/f-$n.png" "file://${abs}#${t}" 2>/dev/null
   done
@@ -105,7 +120,7 @@ fi
 
 # 4) Encode. yuv420p + faststart for universal, in-feed playback.
 ffmpeg -y -framerate "$fps" -i "$tmp/seq/%06d.png" "${audio_in[@]}" \
-  -c:v libx264 -pix_fmt yuv420p -crf 18 -preset veryslow "${audio_codec[@]}" \
+  -c:v libx264 -pix_fmt yuv420p -crf 18 -preset "$preset" "${audio_codec[@]}" \
   -movflags +faststart "$out" >/dev/null 2>&1
 
 echo "wrote ${out} ($(du -h "$out" | cut -f1), $(awk "BEGIN{printf \"%.1f\", $total/$fps}")s, ${sound}: ${read_hold}s read hold, ${end_hold}s brand hold)"

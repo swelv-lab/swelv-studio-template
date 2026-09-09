@@ -8,6 +8,15 @@
 //
 //   node render-frames.js <htmlAbsPath> <w> <h> <frames> <outDir> [chromePath]
 //
+// <w>/<h> are CSS pixels — the size the page lays itself out at. Frames are
+// rasterised at RENDER_SCALE times that, which leaves the layout identical and
+// only makes the pixel grid under it finer. Accepts a decimal or an exact
+// fraction ("4/3"); prefer the fraction so the target lands on a whole pixel.
+//
+// Leave it unset. 1x is the right answer for almost every video — see the
+// "Master size" section of the new-video skill for the one exception, and for
+// why rendering video at 2x is a mistake rather than a quality setting.
+//
 // Writes <outDir>/f-0000.png … at t = k / (frames-1).  Needs `npm install` first.
 
 const path = require("path");
@@ -19,6 +28,14 @@ const puppeteer = require("puppeteer-core");
   const h = parseInt(hS, 10);
   const frames = parseInt(framesS, 10);
   const exe = chromePath || "/usr/bin/google-chrome-stable";
+  // "4/3" or "1.5" or unset.
+  const rawScale = process.env.RENDER_SCALE;
+  const scale = !rawScale
+    ? 1
+    : rawScale.includes("/")
+      ? rawScale.split("/").reduce((a, b) => Number(a) / Number(b))
+      : Number(rawScale);
+  if (!Number.isFinite(scale) || scale <= 0) throw new Error(`bad RENDER_SCALE: ${rawScale}`);
 
   const browser = await puppeteer.launch({
     executablePath: exe,
@@ -29,7 +46,7 @@ const puppeteer = require("puppeteer-core");
       "--hide-scrollbars",
       "--force-color-profile=srgb",
     ],
-    defaultViewport: { width: w, height: h, deviceScaleFactor: 1 },
+    defaultViewport: { width: w, height: h, deviceScaleFactor: scale },
   });
 
   try {
