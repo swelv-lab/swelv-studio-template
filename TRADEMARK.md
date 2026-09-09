@@ -14,6 +14,10 @@ So, concretely:
   or output.
 - ❌ Don't name your fork in a way that suggests swelv publishes or endorses it.
 
-Everything under `brand-kit/` and `examples/` is a **fictional demo brand**
-("Meridian"), created for this repo. It is not a real company, and it carries no
-swelv branding — replace it with your own on the first run.
+`brand-kit/` ships filled in with **swelv's own brand** — the palette, the type
+and the V mark — as a worked example of what a finished brand kit looks like, so
+a fresh clone renders something real. It is there to be replaced, not reused:
+run `/setup-brand` on the first session and it is overwritten with yours.
+
+Until you do, anything you render carries swelv's marks. Don't publish that as
+your own.

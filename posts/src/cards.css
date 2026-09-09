@@ -115,7 +115,7 @@
   font-weight: 600;
   font-size: 18.5px;
   line-height: 1.45;
-  color: #cbd1e4;
+  color: var(--muted);
 }
 
 /* ── Footer ───────────────────────────────────────────────────────────────── */

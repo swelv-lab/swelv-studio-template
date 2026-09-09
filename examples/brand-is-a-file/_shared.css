@@ -1,0 +1,167 @@
+/* Layout only. Every colour and typeface comes from the brand kit — that is the
+   thing this carousel is about, so it would be a poor advertisement to break it
+   here. Copied into each slide's <style> block via a <link>. */
+/* The canvas comes from the preset class on .canvas (li-portrait), not from
+   here. Layout only below. */
+.stage {
+  justify-content: space-between;
+}
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.top .logo-lockup {
+  font-size: 30px;
+}
+.body .kicker {
+  margin-bottom: 26px;
+}
+.body .headline {
+  font-size: 74px;
+  max-width: 15ch;
+}
+.body .subhead {
+  margin-top: 26px;
+  font-size: 23px;
+  max-width: 30ch;
+}
+.foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 40px;
+}
+.foot .annot {
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 19px;
+  line-height: 1.5;
+  color: var(--muted);
+  max-width: 38ch;
+}
+
+/* A panel of figures. Numbers sit at full ink, always. */
+.panel {
+  margin-top: 52px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 34px 38px;
+  display: flex;
+  gap: 46px;
+}
+.stat .n {
+  font-family: var(--sans);
+  font-weight: 900;
+  font-size: 60px;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--fg);
+}
+.stat .n.mark {
+  color: var(--accent);
+}
+.stat {
+  flex: 1;
+}
+.stat .l {
+  margin-top: 12px;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.divider {
+  width: 1px;
+  background: var(--line-soft);
+}
+
+/* Token rows — the file itself, quoted. */
+.tokens {
+  margin-top: 48px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 10px 34px;
+}
+.tk {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+.tk:last-child {
+  border-bottom: 0;
+}
+.tk .name {
+  font-family: var(--mono);
+  font-size: 19px;
+  color: var(--accent);
+  width: 9ch;
+}
+.tk .val {
+  font-family: var(--mono);
+  font-size: 19px;
+  color: var(--fg);
+  flex: 1;
+}
+.tk .swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+.tk .note {
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 17px;
+  color: var(--faint);
+}
+
+/* The pipeline row. */
+.flow {
+  margin-top: 52px;
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+}
+.node {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: 26px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.node .k {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.node .v {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 21px;
+  line-height: 1.2;
+  color: var(--fg);
+}
+.node.out {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+}
+.node.out .v {
+  color: var(--accent);
+}
+.arrow {
+  align-self: center;
+  font-family: var(--sans);
+  font-size: 26px;
+  color: var(--faint);
+}

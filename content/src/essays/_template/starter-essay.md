@@ -1,51 +1,62 @@
 ---
-title: The check call is a design failure
+title: How to write one of these
 slug: starter-essay
 kind: article
-eyebrow: Operations
-deck: Nine phone calls to answer one question, and none of them produces new information. What changes when every party reads the same record.
-description: Why freight coordination degrades into phone calls, and what changes when every party reads the same timeline.
-author: Sam Okonjo
-role: Co-Founder
-date: 2026-08-31
+eyebrow: Starter
+deck: The starter essay. Copy this folder, keep the frontmatter, replace everything else.
+description: A worked skeleton for a long-form post — the frontmatter fields that matter, the section shape, and the two things that will catch you.
+author: Your Name
+role: Your Role
+date: 2026-01-01
 tags:
-  - freight operations
-  - coordination
+  - writing
+  - starter
 faq:
-  - q: What is a check call?
-    a: A phone call placed to a driver or carrier to ask where a load is. Most brokerages make several per load per day, because there is no shared record that answers the question without asking a person.
-  - q: Why not just add tracking?
-    a: Tracking answers where the truck is. It does not answer whether the appointment still holds, who was told, or what the shipper was promised. Those live in someone's inbox.
-  - q: Does this replace the dispatcher?
-    a: No. It removes the part of the job that is retyping what someone already said, which is the part dispatchers like least.
+  - q: Why does every field in the frontmatter matter?
+    a: Each one becomes a real thing in the output. The deck becomes the social card subtitle, the description becomes the meta description, the FAQ becomes FAQPage structured data, and the tags become the caption hashtags. A blank field is a blank surface downstream.
+  - q: How long should an essay be?
+    a: Between 700 and 1200 words. Shorter reads as a post that wanted to be a post; longer starts needing subheadings inside subheadings, which is the point at which it is two essays.
+  - q: Where do the images go?
+    a: Nowhere. The body is image-free by design, and the rhythm comes from numbered sections and pull quotes instead. A genuine data visual belongs inline as on-brand SVG, which passes straight through the markdown.
 ---
 
-This is the starter essay. Copy this folder, keep the frontmatter fields, and
-replace everything below. It exists so the pipeline has something to render on a
-fresh clone, and so you can see the shape a finished piece takes.
+This is the starter. Copy the folder, keep the frontmatter fields, and replace
+everything below. It exists so the pipeline has something to render on a fresh
+clone, and so the shape of a finished piece is visible before you write one.
 
-## The question nobody can answer
+## Start with the argument
 
-A load is late. The shipper asks when it will arrive. Answering that takes nine
-phone calls, because the answer is distributed across a driver's memory, a
-dispatcher's notepad, and a spreadsheet somebody updated this morning.
+Before the first sentence, answer one question: what does the reader believe at
+the end that they did not believe at the start? If the answer is "that we are
+good at this", it is not an essay yet.
 
-> Nobody chose to run freight on phone calls. It accumulated, one workaround at
-> a time, and then it was the system.
+> An essay that could have been a landing page was a landing page. The thing that
+> makes it worth reading is that it argues something a reasonable person could
+> disagree with.
 
-Dispatchers make those calls because there is no shared record, and they will
-keep making them for exactly as long as that stays true. Nine calls is what
-reconstructing a known fact costs, repeated all day.
+Everything after that is structure.
 
-## What a shared record changes
+## Keep the sections numbered and few
 
-When the carrier marks a stop and the shipper sees it without anyone placing a
-call, the coordination work does not get faster. It stops existing.
+Three to five `## H2` sections, each one making a single move. The renderer draws
+the numbers, so write plain titles. No `###` nesting: if a section needs
+sub-sections, it is carrying two ideas and should be split.
 
-That is the whole argument. Everything else is implementation.
+Short paragraphs. One or two pull quotes, used for your sharpest lines rather
+than for decoration.
 
-## Writing your own
+## Two things that will catch you
 
-Read `docs/writing-rules.md` before you start, especially the ban on the
-antithesis pair, which long-form attracts like nothing else. Then run
-`/new-essay` and let the studio handle the rest.
+`output/` is regenerated on every render, with one deliberate exception: the
+caption file is written once and never overwritten, so a caption you tailored
+survives. Edit that one in place.
+
+And markdown converts a double hyphen into an em dash. Most house styles here ban
+those, so write the middle dot explicitly and check the rendered page before you
+call it done.
+
+## Then read the rules
+
+`docs/writing-rules.md` before you start, not after. Long-form attracts the
+banned antithesis pair (*"X is A. Y is B."*) more than any other surface in this
+studio, and it is much cheaper to avoid than to edit out.

@@ -22,8 +22,9 @@ file through `posts/render.sh`. Work entirely inside `posts/`.
    set up yet — offer `/setup-brand` first.
 2. **`docs/design-rules.md`** and **`docs/writing-rules.md`** — binding, and the
    writing one is the more commonly broken.
-3. **`posts/README.md`** — the mechanic, the canvas-size table, and the
-   catalogue of posts already made.
+3. **`posts/README.md`** — the mechanic, and
+   **`posts/NETWORKS.md`** — every canvas size, ratio and safe zone, for all
+   nine networks that ship with templates.
 
 ## Steps
 
@@ -34,12 +35,20 @@ file through `posts/render.sh`. Work entirely inside `posts/`.
    of it lives in that folder. Pick the canvas from `posts/README.md` (LinkedIn
    feed portrait 1080×1350 is the default). **One or two questions maximum** —
    this is for non-technical teammates, keep it light.
-2. **Start from the closest existing post, never a blank file.** Copy the nearest
-   match into the topic folder as `posts/src/<network>/<topic>/<name>.html` and
-   keep its structure: `.canvas` → `.stage` → header (logo lockup + index) →
-   `.kicker` → `.headline` → `.subhead` → body → footer band. Nothing close?
-   `posts/src/_template/` has a starter card and a starter carousel, and
-   `examples/` has finished work worth reading for house style.
+2. **Start from the closest existing post, never a blank file.** Copy the
+   nearest match — or that network's own starter,
+   `posts/src/<network>/_template/<format>.html` — into the topic folder as
+   `posts/src/<network>/<topic>/<name>.html`. Keep the structure: `.canvas` →
+   `.stage` → header (logo lockup + index) → `.kicker` → `.headline` →
+   `.subhead` → body → footer band. `examples/` has finished work worth reading
+   for house style.
+
+   **The canvas comes from the preset class on `.canvas`** (e.g.
+   `class="canvas ig-story"`), never from hardcoded pixels, and `render.sh`
+   resolves it. For a vertical format — story, Reel, TikTok, Short — the preset
+   also carries the platform's safe zones; `.stage` respects them, anything
+   absolutely positioned does not. Add `guides` to the class to see the unsafe
+   bands, and take it off before the real render.
 3. **Write the copy and the composition.** Brand tokens come from
    `brand-kit/brand.css` via a relative path — **never fork it, and never
    redefine a colour or typeface in the local `<style>`**. Local CSS is layout
@@ -49,7 +58,8 @@ file through `posts/render.sh`. Work entirely inside `posts/`.
    ```bash
    cd posts && ./render.sh src/<network>/<topic>/<name>.html
    ```
-   Add `[W] [H]` for a non-default canvas, e.g. `1200 1200` for a square card.
+   No size arguments: the preset resolves them. Passing `[W] [H]` overrides it,
+   which you should only need for a one-off canvas that has no preset.
 5. **Write the caption** into
    `posts/output/<network>/<topic>/<topic>-caption.txt`, following
    `docs/writing-rules.md` § Caption rules. The rule broken most often: **a

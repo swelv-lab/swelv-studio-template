@@ -1,0 +1,50 @@
+{
+  "_comment": "Sound for the explainer, synthesized by posts/render-audio.js. There is a voice over the top of this, so every cue is deliberately quiet: these mark transitions, they do not perform. Times are absolute seconds on the same clock as the narration.",
+  "seed": 20260831,
+  "cues": [
+    { "type": "whoosh", "time": 0.10, "dur": 1.10, "gain": 0.075 },
+
+    { "type": "whoosh", "time": 5.20, "dur": 0.55, "gain": 0.050 },
+    { "type": "tone",   "time": 11.55, "freq": 587.33, "dur": 0.30, "gain": 0.055 },
+    { "type": "tone",   "time": 12.55, "freq": 659.25, "dur": 0.30, "gain": 0.050 },
+    { "type": "tone",   "time": 13.55, "freq": 783.99, "dur": 0.34, "gain": 0.055 },
+    { "type": "whoosh", "time": 14.55, "dur": 0.60, "gain": 0.050 },
+
+    { "type": "whoosh", "time": 16.45, "dur": 0.50, "gain": 0.048 },
+    { "type": "tone",   "time": 19.30, "freq": 587.33, "dur": 0.26, "gain": 0.050 },
+    { "type": "tone",   "time": 19.85, "freq": 587.33, "dur": 0.26, "gain": 0.050 },
+    { "type": "tone",   "time": 20.40, "freq": 587.33, "dur": 0.26, "gain": 0.050 },
+
+    { "type": "whoosh", "time": 25.90, "dur": 0.50, "gain": 0.048 },
+    { "type": "note",   "time": 29.15, "freq": 587.33, "dur": 0.40, "gain": 0.060 },
+
+    { "type": "whoosh", "time": 30.55, "dur": 0.55, "gain": 0.048 },
+    { "type": "tone",   "time": 34.05, "freq": 493.88, "dur": 0.36, "gain": 0.058 },
+
+    { "type": "whoosh", "time": 35.80, "dur": 0.55, "gain": 0.048 },
+    { "type": "whoosh", "time": 42.40, "dur": 0.85, "gain": 0.042 },
+
+    { "type": "whoosh", "time": 48.20, "dur": 0.50, "gain": 0.048 },
+    { "type": "tone",   "time": 49.70, "freq": 587.33, "dur": 0.24, "gain": 0.045 },
+    { "type": "tone",   "time": 50.20, "freq": 587.33, "dur": 0.24, "gain": 0.045 },
+    { "type": "tone",   "time": 50.70, "freq": 587.33, "dur": 0.24, "gain": 0.045 },
+    { "type": "tone",   "time": 51.20, "freq": 587.33, "dur": 0.24, "gain": 0.045 },
+
+    { "type": "whoosh", "time": 55.45, "dur": 0.50, "gain": 0.048 },
+    { "type": "tone",   "time": 56.95, "freq": 587.33, "dur": 0.22, "gain": 0.055 },
+    { "type": "tone",   "time": 57.37, "freq": 587.33, "dur": 0.22, "gain": 0.055 },
+    { "type": "tone",   "time": 57.79, "freq": 587.33, "dur": 0.22, "gain": 0.055 },
+    { "type": "tone",   "time": 58.21, "freq": 587.33, "dur": 0.22, "gain": 0.055 },
+    { "type": "tone",   "time": 58.63, "freq": 587.33, "dur": 0.22, "gain": 0.055 },
+
+    { "type": "whoosh", "time": 60.55, "dur": 0.55, "gain": 0.048 },
+    { "type": "note",   "time": 63.35, "freq": 587.33, "dur": 0.42, "gain": 0.052 },
+
+    { "type": "whoosh", "time": 68.50, "dur": 0.55, "gain": 0.048 },
+    { "type": "whoosh", "time": 71.80, "dur": 0.55, "gain": 0.048 },
+
+    { "type": "whoosh", "time": 75.35, "dur": 0.70, "gain": 0.070 },
+    { "type": "bell",   "time": 75.95, "freq": 587.33, "dur": 1.60, "gain": 0.130 },
+    { "type": "chord",  "time": 76.10, "freqs": [293.66, 440.00, 587.33], "dur": 2.60, "gain": 0.045 }
+  ]
+}

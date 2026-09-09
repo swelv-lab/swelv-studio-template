@@ -27,7 +27,7 @@
   <img src="docs/media/showcase.png" alt="Posts, deck slides, an essay hero card and a content calendar, all rendered from this repo" width="100%" />
 </p>
 
-<p align="center"><sub>Everything above came out of a fresh clone, unedited. It is a fictional demo brand — an agent replaces it with yours in about five minutes.</sub></p>
+<p align="center"><sub>Everything above came out of a fresh clone, unedited, in the brand the repo ships with. An agent replaces that with yours in about five minutes.</sub></p>
 
 ---
 
@@ -150,19 +150,24 @@ studio/
 ├── decks/           16:9 slides → PDF
 ├── content/         Essays: markdown → branded page + hero + share kit
 ├── calendar/        The content board
-├── examples/        Finished work in the demo brand (read-only)
+├── examples/        Finished work, made with this studio (read-only)
 ├── reference/       Optional: a read-only copy of your site, so content can match it
 └── .claude/skills/  The commands above
 ```
 
-## About the demo brand
+## About the brand it ships with
 
-The repo ships configured for **Meridian**, a fictional freight operations
-company. It exists so a fresh clone renders something worth looking at before you
-have typed anything, and so the examples have a coherent voice.
+`brand-kit/` arrives filled in with **swelv's own** — the navy, the orange, the V
+mark, the type — because a scaffold full of `TODO` teaches you nothing about what
+a finished brand kit looks like. Every screenshot above came out of it.
 
-It is not a real company, and it carries no swelv branding anywhere. `/setup-brand`
-replaces it wholesale.
+It is there to be replaced, not reused. `/setup-brand` overwrites it on the first
+session, and until you run it, anything you render carries swelv's marks. See
+[TRADEMARK.md](TRADEMARK.md).
+
+The `_template/` folders are the opposite: deliberately empty scaffolds with
+placeholder copy, so you can see the shape of a surface without inheriting
+somebody's words.
 
 ## Licence
 

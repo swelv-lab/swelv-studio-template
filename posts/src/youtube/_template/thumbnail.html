@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>YouTube · thumbnail 1280x720</title>
+    <link rel="stylesheet" href="../../../../brand-kit/brand.css" />
+    <link rel="stylesheet" href="../../_shared/canvas.css" />
+    <style>
+      /* LAYOUT ONLY. The canvas size comes from the preset class on .canvas;
+         every colour and typeface comes from the brand kit. Never set either
+         here, or a rebrand stops being one edit.
+         Canvas: 1280x720 (16:9). It will be read at about 210px wide in a
+         sidebar, so design for that size, not for the one on your screen.
+      */
+      /* A thumbnail is read at roughly 210px wide in a sidebar. Design for THAT:
+         four or five words, enormous, high contrast. Everything else is noise. */
+      .stage { justify-content: space-between; }
+      .top { display: flex; align-items: center; justify-content: space-between; }
+      .top .logo-lockup { font-size: 32px; }
+      .body { display: flex; flex-direction: column; justify-content: center; flex: 1; }
+      .body .headline { font-size: 108px; max-width: 11ch; letter-spacing: -0.045em; }
+      .body .headline .o { color: var(--accent); }
+      .foot { display: flex; align-items: center; justify-content: space-between; }
+      .foot .annot {
+        font-family: var(--mono); font-size: 18px; letter-spacing: 0.14em;
+        text-transform: uppercase; color: var(--faint);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas yt-thumb">
+      <div class="stage">
+        <div class="top">
+          <div class="logo-lockup"><span class="wordmark">swel</span></div>
+          <span class="index">01</span>
+        </div>
+
+        <div class="body">
+          <h1 class="headline">
+            <span class="q">Four words.</span>
+            <span class="q o">Maybe five.</span>
+          </h1>
+        </div>
+
+        <div class="foot">
+          <span class="annot">The one thing it is about</span>
+          <span class="tagline">Content infrastructure in motion.</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

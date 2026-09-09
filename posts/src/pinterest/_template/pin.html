@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Pinterest · standard pin 1000x1500</title>
+    <link rel="stylesheet" href="../../../../brand-kit/brand.css" />
+    <link rel="stylesheet" href="../../_shared/canvas.css" />
+    <style>
+      /* LAYOUT ONLY. The canvas size comes from the preset class on .canvas;
+         every colour and typeface comes from the brand kit. Never set either
+         here, or a rebrand stops being one edit.
+         Canvas: 1000x1500 (2:3). The only ratio Pinterest never crops.
+      */
+      /* Pinterest is a search surface: the title does the work, and it is read
+         small in a masonry grid. Put the words at the top, big. */
+      .stage { justify-content: space-between; }
+      .top { display: flex; align-items: center; justify-content: space-between; }
+      .top .logo-lockup { font-size: 28px; }
+      .body .kicker { margin-bottom: 22px; }
+      .body .headline { font-size: 76px; max-width: 13ch; }
+      .body .subhead { margin-top: 24px; font-size: 22px; }
+      .steps { margin-top: 44px; display: flex; flex-direction: column; gap: 0; }
+      .step {
+        display: flex; align-items: baseline; gap: 18px; padding: 18px 0;
+        border-bottom: 1px solid var(--line-soft);
+      }
+      .step:last-child { border-bottom: 0; }
+      .step .n {
+        font-family: var(--mono); font-size: 17px; color: var(--accent);
+        letter-spacing: 0.1em; width: 3ch;
+      }
+      .step .t { font-family: var(--sans); font-weight: 500; font-size: 22px; color: var(--muted); }
+      .foot { display: flex; align-items: center; justify-content: space-between; }
+    </style>
+  </head>
+  <body>
+    <div class="canvas pin-standard">
+      <div class="stage">
+        <div class="top">
+          <div class="logo-lockup"><span class="wordmark">swel</span></div>
+          <span class="index">Guide</span>
+        </div>
+
+        <div class="body">
+          <p class="kicker">Kicker · the category</p>
+          <h1 class="headline">
+            <span class="q">A title someone</span>
+            <span class="q">would search for.</span>
+          </h1>
+          <p class="subhead">
+            One line saying what they get. Pins are found, not scrolled past.
+          </p>
+
+          <div class="steps">
+            <div class="step"><span class="n">01</span><span class="t">The first step</span></div>
+            <div class="step"><span class="n">02</span><span class="t">The second step</span></div>
+            <div class="step"><span class="n">03</span><span class="t">The third step</span></div>
+          </div>
+        </div>
+
+        <div class="foot">
+          <span class="tagline">Content infrastructure in motion.</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

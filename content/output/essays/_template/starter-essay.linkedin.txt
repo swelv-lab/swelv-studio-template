@@ -1,5 +1,5 @@
-Nine phone calls to answer one question, and none of them produces new information. What changes when every party reads the same record.
+The starter essay. Copy this folder, keep the frontmatter, replace everything else.
 
-Read the full piece: https://meridian.example/blog/starter-essay
+Read the full piece: https://swelv.io/resources/blog/starter-essay
 
-#FreightOperations #Coordination #Freight
+#Writing #Starter #ContentOps

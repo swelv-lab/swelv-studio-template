@@ -50,7 +50,14 @@ via `decks/to-pdf.sh`. Work inside `decks/`.
    for f in src/<deck>/*.html; do ./render.sh "$f"; done
    ./to-pdf.sh <deck>
    ```
-6. **Show the result** — `Read` a few of the PNGs so the user can eyeball them.
+6. **Offer the walkthrough.** If motion would help — a build-up, an order of
+   events, a number moving — or if they want something to present from rather
+   than send, run `./present.py <deck>`. It turns the deck they already have
+   into one self-contained HTML file that presents with arrow keys and renders
+   to an MP4. **Never build a second, animated copy of a deck**: the slides are
+   the single source, and the animation is generic.
+
+7. **Show the result** — `Read` a few of the PNGs so the user can eyeball them.
    Check every slide for clipped text; 16:9 is unforgiving and a long headline
    silently overflows.
 

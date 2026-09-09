@@ -1,9 +1,11 @@
 # Brand
 
-> **This file is the demo brand.** It describes *Meridian*, a fictional freight
-> operations company invented for this repo, so that a fresh clone has something
-> coherent to render. Run **`/setup-brand`** and an agent will interview you and
-> replace every section below with yours.
+> **This file ships filled in, as a worked example.** It describes *swelv studio*
+> — this repo, the thing you are holding — so that a fresh clone has a coherent
+> voice to render with and you can see what a finished brand doc looks like.
+>
+> Run **`/setup-brand`** and an agent will interview you and replace every
+> section below with yours.
 >
 > Everything the studio writes — every headline, caption, slide and script — is
 > grounded in this file. If a section here is vague, the output is vague. It is
@@ -13,111 +15,120 @@
 
 ## 1 · What we are
 
-**Meridian** is scheduling software for freight brokers. A broker running fifty
-loads a day tracks them across phone calls, text messages and a spreadsheet;
-Meridian puts every load on one timeline that the broker, the carrier and the
-shipper all see at the same time.
+**swelv studio** is a content studio that runs from a terminal. You describe what
+you want; an agent writes it, renders it, and shows you the picture. Posts, brand
+assets, decks, videos and essays — all from self-contained HTML through headless
+Chrome.
 
-- **Category:** freight operations software.
-- **Stage:** early, ~40 customers.
-- **We are not:** a load board, a marketplace, or a carrier. We do not move
-  freight and we do not set rates.
+- **Category:** content tooling for small teams.
+- **Who publishes it:** [swelv](https://swelv.io), who built it to make their own.
+- **We are not:** a design tool, a template marketplace, a scheduler, or a
+  hosted service. Nothing here deploys, and nothing phones home.
+
+The thing that makes it work is not the rendering. It is that the brand is a
+file. Say that plainly and often.
 
 ## 2 · Who we talk to
 
-| Audience        | What they care about                                    | What they already believe          |
-| --------------- | ------------------------------------------------------- | ---------------------------------- |
-| **Brokers**     | Loads not falling through the cracks; fewer check calls  | Their spreadsheet mostly works     |
-| **Carriers**    | Getting told about changes without being chased          | Software is something done *to* them |
-| **Shippers**    | Knowing where a load is without asking                   | Delays get hidden from them        |
+| Audience             | What they care about                                | What they already believe          |
+| -------------------- | ---------------------------------------------------- | ---------------------------------- |
+| **Founders**         | Shipping content without hiring for it                | Good design needs a designer       |
+| **Solo marketers**   | Consistency across fifty surfaces they made alone     | Consistency means a rigid template |
+| **Engineers**        | That it is files, in git, with no lock-in             | AI-made content looks AI-made      |
 
 Write to one of them at a time. A surface that addresses all three addresses
 nobody.
 
 ## 3 · Positioning
 
-**One line:** Every load on one timeline, from tender to proof of delivery.
+**One line:** The brand is a file. Everything else follows from that.
 
-**The stance:** the old way is manual by default, not by design. Nobody chose to
-run freight on phone calls — it accumulated. So we describe the *number of
-hand-offs*, never the intelligence of the people doing them. Forward-looking,
-never sneering at incumbents or at the way people work today.
+**The stance:** design systems did not fail small teams, they were just never
+handed to them in a usable shape. So we describe *what becomes possible*, never
+what other tools get wrong. No swipes at Canva, at agencies, or at anyone's
+Figma file.
 
-**The tagline, used exactly, always:** `One timeline for every load.`
+**On AI:** we are candid that an agent writes this content, and equally candid
+that most agent-written content is bad. The rules in `docs/` exist because we
+had to write them to stop our own output reading as machine-made. That honesty
+is the position — never "AI does it for you", always "here is what it takes to
+make AI output you would sign".
+
+**The tagline, used exactly, always:** `Content infrastructure in motion.`
 Never reworded, re-punctuated or split. It appears in the footer of most
 surfaces and nowhere twice on the same one.
 
 ## 4 · How the name is written
 
-- Always title-case: **Meridian**. Never MERIDIAN, never meridian.
-- The mark is a meridian line. It is not a globe, a target, or a clock — don't
-  describe it as one.
-- **Never personify the brand in body copy.** "Meridian sends the update" → "The
-  platform sends the update" or "We send the update". Naming the product as an
-  object ("why we built Meridian") is fine; the brand name as the *subject of a
-  description* is not. This one rule kills more press-release voice than any
-  other.
+- Always lowercase: **swelv studio**. Never Swelv, never SWELV.
+- The wordmark is the lockup: the text `swel` plus the mark as the `v`. Never
+  write the word and place the mark beside it — that repeats the letter.
+- **The mark is not a checkmark.** It is a chevron, and it is the `v`. Never
+  position it as a tick, a completion state, or a "done" symbol.
+- **Never personify the brand in body copy.** "swelv studio writes the caption"
+  → "The studio writes the caption" or "You describe it, the agent writes it".
+  Naming the product as an object ("why we built swelv studio") is fine; the
+  brand name as the *subject of a description* is not.
 
 ## 5 · Voice
 
 **Precision over cleverness. One clear claim beats a clever metaphor, every time.**
 
 - Say the mechanic, not the metaphor. A number, an actor, or a sequence beats an
-  image. If a line could describe any industry, it isn't about ours.
-- Concrete nouns. "Check call", "tender", "proof of delivery" — the words the
-  reader already uses at work.
+  image. Show the command, name the file, state what changes.
+- Concrete nouns. "One CSS file", "a headless Chrome screenshot", "ninety words"
+  — not "a powerful design system".
 - Short declaratives. Full sentences, no verbless fragments for rhythm.
 - Confident, not loud. No exclamation marks, no all-caps for emphasis.
+- **Admit the limits.** Anything that says this makes content effortless is
+  wrong and will read as a lie to exactly the people we want.
 
 **Words we never use:** streamline, empower, leverage, seamless, effortlessly,
 unlock, game changer, revolutionise, robust, cutting-edge, best-in-class,
-solution (as a noun for our product).
+solution (as a noun for the product), 10x, supercharge.
 
 **Punctuation:** no em dashes anywhere — use a middle dot `·`, a comma, or
 restructure the sentence. No emojis, on any surface.
 
 ## 6 · Grounding — where facts come from
 
-Never write a product claim, a statistic or a mechanism from memory. Every claim
-traces to one of these:
+Never write a claim from memory. Everything traces to something in this repo:
 
-| Source                     | Where                                     | Good for                        |
-| -------------------------- | ----------------------------------------- | ------------------------------- |
-| Product docs               | `https://docs.example.com`                | How a feature actually works    |
-| Website copy               | `https://example.com`                     | Approved wording, positioning   |
-| Market data                | *(add your own file or link)*             | Numbers, sizing, sources        |
-
-> **Replace this table with your real sources.** If a source is a private repo
-> you can add it as a read-only git submodule at `reference/` — see
-> `docs/reference-folder.md`. If a claim has no source, stop and ask, don't
-> invent one.
+| Source                     | Where                              | Good for                          |
+| -------------------------- | ---------------------------------- | --------------------------------- |
+| The repo itself            | `README.md`                        | What it is, what it needs to run  |
+| The craft rules            | `docs/design-rules.md`, `docs/writing-rules.md` | What we claim about quality |
+| The pipelines              | each pipeline's `README.md`        | How a thing is actually made      |
+| The publisher              | <https://swelv.io>                 | Who built it                      |
 
 **What we must never imply**
 
-- That the platform moves freight or holds money. It coordinates; the carrier
-  hauls, the broker books.
-- That tracking is "real-time". Positions update on a cadence; say "updates on
-  arrival at each stop", not "live".
-- That onboarding a carrier is instant. It takes a day or so.
+- That it designs for you. It applies a brand you defined. If the brand kit is
+  vague, so is the output — say so.
+- That the output needs no review. Every skill ends by showing you the picture,
+  because you are the one who signs it.
+- That it is a hosted product, has an account, or costs anything.
+- Any claim about how many people use it. We do not have that number.
+- Any performance or time-saving figure we have not measured.
 
 *(Your version of this list is the single most valuable part of this file. It is
 what stops an eager agent shipping a claim your lawyers hate.)*
 
 ## 7 · Look
 
-The palette, type and geometry live in `brand.css` — that is the source of
-truth for anything visual, and every surface in the repo links it. The intent
-behind the values shipped there:
+The palette, type and geometry live in `brand.css` — that is the source of truth
+for anything visual, and every surface in the repo links it. The intent behind
+the values shipped there:
 
-- **Warm paper ground, deep-teal accent.** Deliberately not another dark SaaS
-  gradient. Logistics is a physical, paper-heavy industry; the surfaces should
-  feel like something printed and pinned up, not like a dashboard screenshot.
-- **One accent, reserved.** Deep teal marks the single most important thing on a
-  surface. Status colours mean status and nothing else.
-- **Full-strength ink for figures.** Any number that matters is `--fg`. Muting a
-  number to look elegant is the fastest way to look unserious.
+- **Deep navy ground, one orange accent.** The ground is the thing recognised in
+  a feed before a word is read. Orange marks the single most important element
+  on a surface, and nothing else.
+- **Full-strength ink for figures.** Any number that carries an argument is
+  `--fg`. Muting a number to look elegant is the fastest way to look unserious.
+- **A hairline frame, and a lot of air.** The chrome reads as intent rather than
+  decoration, and air is the cheapest quality signal there is.
 
-The universal craft rules — hierarchy, spacing, what makes an image read as
+The universal craft rules — hierarchy, spacing, what makes a surface read as
 machine-made — are brand-independent and live in
 [`docs/design-rules.md`](../docs/design-rules.md) and
 [`docs/writing-rules.md`](../docs/writing-rules.md). Read those too; they apply

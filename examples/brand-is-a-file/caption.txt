@@ -1,0 +1,9 @@
+We changed twelve lines last week and the whole repo came out in a different brand.
+
+That was the test. Every post, slide, video and essay reads one brand kit, and no layout file is allowed to name a colour, so a rebrand touches one file instead of two hundred.
+
+The studio is open source, and an agent sets it up with your brand on the first run.
+
+What would a rebrand cost you today?
+
+github.com/swelv-lab/studio

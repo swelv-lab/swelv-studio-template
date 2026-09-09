@@ -1,17 +1,17 @@
 {
   "_comment": "The brand's WORDS, for the places that need them in code (the essay builder, share cards, structured data). brand.css holds the look; this holds the strings. /setup-brand fills both.",
 
-  "name": "Meridian",
-  "wordmark": "Meridian",
-  "tagline": "One timeline for every load.",
+  "name": "swelv studio",
+  "wordmark": "swel",
+  "tagline": "Content infrastructure in motion.",
 
-  "url": "https://meridian.example",
-  "blogPath": "/blog",
-  "blogLabel": "meridian.example/blog",
-  "sectionLabel": "Insights",
+  "url": "https://swelv.io",
+  "blogPath": "/resources/blog",
+  "blogLabel": "swelv.io/resources/blog",
+  "sectionLabel": "Field notes",
 
-  "ctaText": "See what one timeline looks like.",
-  "ctaHref": "https://meridian.example",
+  "ctaText": "Read the rest.",
+  "ctaHref": "https://github.com/swelv-lab/studio",
 
-  "defaultHashtag": "#Freight"
+  "defaultHashtag": "#ContentOps"
 }

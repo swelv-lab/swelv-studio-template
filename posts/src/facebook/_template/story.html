@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Facebook · story 1080x1920</title>
+    <link rel="stylesheet" href="../../../../brand-kit/brand.css" />
+    <link rel="stylesheet" href="../../_shared/canvas.css" />
+    <style>
+      /* LAYOUT ONLY. The canvas size comes from the preset class on .canvas;
+         every colour and typeface comes from the brand kit. Never set either
+         here, or a rebrand stops being one edit.
+         Canvas: 1080x1920 (9:16), same safe zones as an Instagram story.
+      */
+      /* The safe zones come from the preset: .stage already sits inside them, so
+         everything below is automatically clear of the platform's own UI.
+         Add class="guides" to .canvas to see the unsafe bands while designing. */
+      .stage { justify-content: space-between; }
+      .top { display: flex; align-items: center; justify-content: space-between; }
+      .top .logo-lockup { font-size: 34px; }
+      .body { display: flex; flex-direction: column; justify-content: center; flex: 1; }
+      .body .kicker { margin-bottom: 26px; }
+      .body .headline { font-size: 88px; max-width: 12ch; }
+      .body .subhead { margin-top: 28px; font-size: 25px; max-width: 22ch; }
+      .cue {
+        margin-top: 44px; display: inline-flex; align-items: center; gap: 12px;
+        align-self: flex-start; border: 1px solid var(--accent-line);
+        background: var(--accent-soft); border-radius: 999px; padding: 14px 24px;
+        font-family: var(--mono); font-size: 18px; letter-spacing: 0.1em;
+        text-transform: uppercase; color: var(--accent);
+      }
+      .foot .tagline { font-size: 18px; }
+    </style>
+  </head>
+  <body>
+    <div class="canvas fb-story">
+      <div class="stage">
+        <div class="top">
+          <div class="logo-lockup"><span class="wordmark">swel</span></div>
+        </div>
+
+        <div class="body">
+          <p class="kicker">Kicker</p>
+          <h1 class="headline">
+            <span class="q">One idea,</span>
+            <span class="q">big enough to</span>
+            <span class="q">read at arm's length.</span>
+          </h1>
+          <p class="subhead">
+            Vertical formats are watched, not studied. Fewer words, bigger type.
+          </p>
+          <span class="cue">Swipe up &middot; or whatever the ask is</span>
+        </div>
+
+        <div class="foot">
+          <span class="tagline">Content infrastructure in motion.</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

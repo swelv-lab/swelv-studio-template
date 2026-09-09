@@ -1,0 +1,117 @@
+/* ============================================================================
+   CANVAS PRESETS · every network's geometry, in one place
+   ----------------------------------------------------------------------------
+   A post never hardcodes its own width and height. It picks a preset class and
+   inherits the canvas, the aspect ratio, and — for the vertical formats — the
+   safe zones the platform's own UI covers up.
+
+   Author at 1x; render.sh emits 2x, so a 1080-wide canvas ships as 2160.
+
+   Sizes verified against Hootsuite's and Buffer's maintained guides, Aug 2026:
+     https://blog.hootsuite.com/social-media-image-sizes-guide/
+     https://buffer.com/resources/social-media-image-sizes/
+   Platforms change these. When one moves, it moves HERE and every template
+   in the repo follows.
+   ========================================================================= */
+
+/* -- Safe zones ------------------------------------------------------------
+   The vertical formats are not fully visible: the platform paints its own UI
+   over the top and bottom, and TikTok stacks a button rail down the right.
+   Content inside .stage stays clear of it automatically. Anything you position
+   absolutely does not, so check those against .guides (below). */
+.canvas {
+  --safe-top: 0px;
+  --safe-bottom: 0px;
+  --safe-right: 0px;
+}
+.stage {
+  inset: calc(var(--frame) + var(--safe-top)) calc(var(--frame) + var(--safe-right))
+    calc(var(--frame) + var(--safe-bottom)) calc(var(--frame));
+}
+
+/* Add class="guides" to the canvas to see the unsafe bands while designing.
+   Take it off before you render for real. */
+.canvas.guides::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99;
+  background:
+    linear-gradient(var(--alert-soft), var(--alert-soft)) top / 100% var(--safe-top) no-repeat,
+    linear-gradient(var(--alert-soft), var(--alert-soft)) bottom / 100% var(--safe-bottom) no-repeat,
+    linear-gradient(var(--alert-soft), var(--alert-soft)) right / var(--safe-right) 100% no-repeat;
+}
+
+/* ============================================================================
+   LINKEDIN
+   Accepts 3:1 to 4:5, minimum width 1080. Portrait claims the most feed height.
+   ========================================================================= */
+.li-portrait  { --w: 1080px; --h: 1350px; }   /* 4:5   · the default */
+.li-square    { --w: 1080px; --h: 1080px; }   /* 1:1   · also the document/carousel page size */
+.li-landscape { --w: 1200px; --h: 627px;  }   /* 1.91:1 · link shares */
+
+/* ============================================================================
+   INSTAGRAM
+   The grid crops to 4:5, so square posts get letterboxed on the profile.
+   ========================================================================= */
+.ig-portrait  { --w: 1080px; --h: 1350px; }   /* 4:5   · the default */
+.ig-tall      { --w: 1080px; --h: 1440px; }   /* 3:4   · maximum feed height */
+.ig-square    { --w: 1080px; --h: 1080px; }   /* 1:1 */
+.ig-landscape { --w: 1080px; --h: 566px;  }   /* 1.91:1 */
+.ig-story     {                               /* 9:16  · Stories and Reels */
+  --w: 1080px; --h: 1920px;
+  --safe-top: 250px;      /* profile row, close button */
+  --safe-bottom: 340px;   /* caption, CTA, the send bar */
+}
+
+/* ============================================================================
+   X / TWITTER
+   ========================================================================= */
+.x-landscape { --w: 1600px; --h: 900px;  }    /* 16:9 · in-stream, uncropped */
+.x-square    { --w: 1080px; --h: 1080px; }    /* 1:1 */
+.x-portrait  { --w: 1080px; --h: 1350px; }    /* 4:5 */
+
+/* ============================================================================
+   FACEBOOK
+   ========================================================================= */
+.fb-portrait  { --w: 1080px; --h: 1350px; }   /* 4:5 */
+.fb-square    { --w: 1080px; --h: 1080px; }   /* 1:1 */
+.fb-link      { --w: 1200px; --h: 630px;  }   /* 1.91:1 · shared-link preview */
+.fb-story     { --w: 1080px; --h: 1920px; --safe-top: 250px; --safe-bottom: 340px; }
+
+/* ============================================================================
+   TIKTOK
+   The right-hand button rail sits over the frame the whole time, so vertical
+   content needs a clear column there as well as clear bands top and bottom.
+   ========================================================================= */
+.tt-photo {
+  --w: 1080px; --h: 1920px;
+  --safe-top: 180px;
+  --safe-bottom: 480px;   /* handle, caption, sound ticker */
+  --safe-right: 200px;    /* like / comment / share / spinning disc */
+}
+
+/* ============================================================================
+   YOUTUBE
+   A thumbnail is read at about 210px wide in a sidebar. Design for that, not
+   for the 1280px you are looking at.
+   ========================================================================= */
+.yt-thumb { --w: 1280px; --h: 720px; }        /* 16:9 */
+.yt-short { --w: 1080px; --h: 1920px; --safe-top: 180px; --safe-bottom: 420px; --safe-right: 180px; }
+
+/* ============================================================================
+   PINTEREST
+   2:3 is the only ratio that is never cropped in the feed.
+   ========================================================================= */
+.pin-standard { --w: 1000px; --h: 1500px; }   /* 2:3 */
+.pin-square   { --w: 1000px; --h: 1000px; }   /* 1:1 */
+
+/* ============================================================================
+   THREADS · BLUESKY
+   Neither crops feed previews, so the ratio is yours to choose. These are the
+   ones that read best on a phone.
+   ========================================================================= */
+.th-portrait  { --w: 1080px; --h: 1350px; }   /* 4:5 */
+.bs-landscape { --w: 1200px; --h: 675px;  }   /* 16:9 */
+.bs-square    { --w: 1080px; --h: 1080px; }   /* 1:1 */

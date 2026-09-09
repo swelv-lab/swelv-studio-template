@@ -5,16 +5,23 @@ Everything renders from a self-contained HTML file through headless Chrome.
 
 ```
 posts/
+├── NETWORKS.md                every canvas size, ratio and safe zone
 ├── src/
+│   ├── _shared/canvas.css     the canvas presets — one place, all networks
 │   ├── cards.css              shared furniture for square "always-on" cards
-│   ├── _template/             starter card + starter carousel — copy these
-│   └── <network>/<topic>/     e.g. linkedin/pricing/ — one carousel per folder
+│   ├── <network>/
+│   │   ├── README.md          what that platform will do to your image
+│   │   ├── _template/         starters at that network's sizes — copy these
+│   │   └── <topic>/           one folder per carousel or card set
 ├── output/                    mirrors src/ exactly. Generated; never hand-edit.
 ├── assets/audio/              real audio files a video can layer in
 ├── render.sh                  HTML → PNG
 ├── render-video.sh            HTML timeline → MP4 (with sound)
 └── render-gif.sh              HTML timeline → looping GIF
 ```
+
+Nine networks ship with templates: `linkedin` `instagram` `x` `facebook`
+`tiktok` `youtube` `pinterest` `threads` `bluesky`.
 
 `output/` mirrors `src/` path for path, so a post and its render are always one
 `src`↔`output` swap apart. **`output/` is committed on purpose** — it's the
@@ -39,19 +46,35 @@ cd posts
 
 Authored at 1×, emitted at 2× for crisp text on retina displays.
 
-## Canvas sizes by network
+## Canvas sizes
 
-| Network                    | Canvas (1×) | Output (2×) | Ratio  |
-| -------------------------- | ----------- | ----------- | ------ |
-| LinkedIn feed (portrait)   | 1080 × 1350 | 2160 × 2700 | 4:5    |
-| LinkedIn square            | 1200 × 1200 | 2400 × 2400 | 1:1    |
-| LinkedIn link / landscape  | 1200 × 627  | 2400 × 1254 | 1.91:1 |
-| Instagram portrait         | 1080 × 1350 | 2160 × 2700 | 4:5    |
-| X / Twitter                | 1600 × 900  | 3200 × 1800 | 16:9   |
+**A post never declares its own width and height.** It picks a preset class and
+inherits the canvas:
 
-Portrait 4:5 is the strongest for a LinkedIn feed — it claims the most vertical
-space. **Every slide of a carousel must share one aspect ratio**, or the platform
-letterboxes the odd one out.
+```html
+<div class="canvas ig-story">
+```
+
+`render.sh` reads that class out of the file, resolves the size from
+`src/_shared/canvas.css`, and renders it. So this is all you type:
+
+```bash
+./render.sh src/tiktok/_template/photo.html      # 1080×1920, resolved
+```
+
+Passing sizes by hand still works as an override, but it is the usual way a post
+silently ships cropped.
+
+**[`NETWORKS.md`](NETWORKS.md) has the full table** — 23 presets across nine
+networks, with each platform's quirks and the safe zones its interface covers.
+
+Two things that catch people:
+
+- **Vertical formats are not fully visible.** Stories, Reels, TikTok and Shorts
+  all paint UI over your image. The presets carry those safe zones and `.stage`
+  respects them; add `guides` to the canvas class to see the unsafe bands.
+- **Every slide of a carousel must share one ratio**, or the platform
+  letterboxes the odd one out.
 
 ## Animated posts
 
@@ -75,7 +98,8 @@ Videos work without it, just slowly.
 ## Making a new post
 
 1. Pick or make the topic folder: `mkdir -p src/linkedin/<topic>`.
-2. **Copy the nearest existing post**, or `src/_template/starter-card.html`.
+2. **Copy the nearest existing post**, or the template for that network,
+   e.g. `src/instagram/_template/story.html`.
    Never start from a blank file.
 3. Keep the skeleton: `.canvas` → `.stage` → header (logo lockup + index) →
    `.kicker` → `.headline` → `.subhead` → body → footer band.
@@ -92,5 +116,5 @@ The `/new-post` skill does all of this for you.
 
 **A local `<style>` block is for layout only.** The moment a hex code or a
 font-family appears outside `brand-kit/brand.css`, changing the brand stops being
-one edit. Everything in this repo — including the demo brand you are looking at —
+one edit. Everything in this repo — including the brand you are looking at —
 survives a rebrand because of that single rule.

@@ -5,7 +5,7 @@
 #   reference/  someone else's live source, vendored here purely so content can
 #               match it exactly. Changing it here changes nothing real and
 #               silently desyncs the reference.
-#   examples/   finished work in the demo brand, kept as a house-style reference.
+#   examples/   finished work in the shipped brand, kept as a house-style reference.
 #               New work belongs in the pipelines, not in here.
 #
 # Exit 2 blocks the tool call and returns the message below to the agent.
@@ -28,7 +28,7 @@ case "$abs" in
     exit 2
     ;;
   "$PROJECT"/examples/*|"$PROJECT"/examples)
-    echo "Blocked: examples/ is finished reference work in the demo brand. Read it to learn the house style, but make new work in posts/ · collateral/ · decks/ · content/ instead." >&2
+    echo "Blocked: examples/ is finished reference work kept for house style. Read it, but make new work in posts/ · collateral/ · decks/ · content/ instead." >&2
     exit 2
     ;;
 esac

@@ -14,7 +14,9 @@ decks/
 │   ├── <deck>/NN-name.png    rendered slides
 │   └── <deck>.pdf            the deliverable
 ├── render.sh                 one slide → PNG (1920×1080)
-└── to-pdf.sh                 all a deck's PNGs → one PDF
+├── to-pdf.sh                 all a deck's PNGs → one PDF
+└── present.py                the whole deck → one self-contained HTML that
+                              presents in a browser and renders to video
 ```
 
 ## Render a deck
@@ -24,6 +26,35 @@ cd decks
 for f in src/my-deck/*.html; do ./render.sh "$f"; done
 ./to-pdf.sh my-deck
 ```
+
+## Present it, or animate it
+
+The same slides you just rendered can also be a walkthrough. `present.py` reads
+that deck and writes **one self-contained HTML file** — the brand kit, every
+slide and a generic build animation, inlined, no dependencies:
+
+```bash
+./present.py my-deck        # -> output/my-deck-present.html
+```
+
+Open it and it presents: **arrow keys** move between slides, **space** plays and
+pauses, **click** advances. It scales to any window, so it works full screen on
+a projector or in a browser tab you send someone.
+
+That same file also exposes `renderFrame(t)`, so it captures like any other
+video in the studio:
+
+```bash
+../posts/render-video.sh "$(pwd)/output/my-deck-present.html" 1920 1080 1008 30 0 0 0
+```
+
+One deck, written once, shipped three ways: PNGs, a PDF, and a walkthrough with
+sound. **No slide contains any animation code** — the build is generic, driven
+off the slide furniture every deck here shares (`.skicker`, `.stitle`,
+`.slead`, `.statband`, and so on), so a deck you write today animates without
+you doing anything about it.
+
+Timing knobs: `BUILD=3 HOLD=2.5 XFADE=0.6 ./present.py my-deck`.
 
 Slides are ordered by filename, so **keep the `NN-` prefix**. The PDF is built
 from the PNGs — a slide you edited but did not re-render is silently stale in the

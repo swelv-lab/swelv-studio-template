@@ -1,4 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" aria-label="Meridian mark">
-  <circle cx="50" cy="50" r="42" stroke="#0E6B5C" stroke-width="9" />
-  <ellipse cx="50" cy="50" rx="17" ry="42" stroke="#0E6B5C" stroke-width="9" />
+<svg xmlns="http://www.w3.org/2000/svg" width="72.5" height="74.75" viewBox="23.75 13.5 72.5 74.75" fill="none">
+  <!-- The V mark. It is a chevron that serves as the "v" of the wordmark, so the
+       lockup reads "swel" + this. It is NOT a checkmark and must never be
+       positioned as a completion symbol.
+
+       Painted as a CSS mask, so the alpha is what matters: the inner stroke's
+       0.5 opacity is what gives the mark its two-tone reading. -->
+  <path d="M 30 24 L 60 82 L 90 24" stroke="#FF5100" stroke-width="12.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 45 22 L 60 49 L 75 22" stroke="#FF5100" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" opacity="0.5" />
 </svg>

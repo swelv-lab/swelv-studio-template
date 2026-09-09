@@ -1,0 +1,21 @@
+{
+  "voice": "en-US-AvaNeural",
+  "rate": "+10%",
+  "lead": 0.6,
+  "lines": [
+    { "id": "hook",     "gap": 0.30, "text": "This is a content studio. It lives in your terminal, and you use it by talking to it." },
+    { "id": "brand1",   "gap": 0.20, "text": "First run, an agent asks about your brand. Your colours, your type, the way you sound." },
+    { "id": "brand2",   "gap": 0.35, "text": "It writes the answers into one file, and everything you make after that comes out on brand." },
+    { "id": "ask",      "gap": 0.15, "text": "Then you just say what you want." },
+    { "id": "carousel", "gap": 0.20, "text": "A carousel about the new pricing. It writes the copy, builds the slides, renders the images, and shows you the picture." },
+    { "id": "iterate",  "gap": 0.35, "text": "Slide two feels flat? Say so. It re-renders in seconds." },
+    { "id": "deck",     "gap": 0.30, "text": "Decks work the same way. Seven slides, one PDF, ready to send." },
+    { "id": "video1",   "gap": 0.15, "text": "Videos too, and this is the fun part." },
+    { "id": "video2",   "gap": 0.35, "text": "Every frame is just HTML, screenshotted by a browser. The sound is synthesized from a little JSON file. There is no video editor anywhere in this." },
+    { "id": "essay",    "gap": 0.30, "text": "Writing a long piece? You get the article, the hero image, the share card and the caption, all in one go." },
+    { "id": "calendar", "gap": 0.35, "text": "Tell it a post went out, and the calendar ticks itself and re-renders the board." },
+    { "id": "agnostic", "gap": 0.35, "text": "And it is not tied to one AI. It is just files and a folder of instructions, so point whichever model you already pay for at it." },
+    { "id": "hour",     "gap": 0.30, "text": "One hour on a Monday gets you a week of content." },
+    { "id": "close",    "gap": 0.10, "text": "It is open source. Yours in five minutes." }
+  ]
+}

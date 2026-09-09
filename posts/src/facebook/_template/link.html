@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Facebook · link preview 1200x630</title>
+    <link rel="stylesheet" href="../../../../brand-kit/brand.css" />
+    <link rel="stylesheet" href="../../_shared/canvas.css" />
+    <style>
+      /* LAYOUT ONLY. The canvas size comes from the preset class on .canvas;
+         every colour and typeface comes from the brand kit. Never set either
+         here, or a rebrand stops being one edit.
+         Canvas: 1200x630 (1.91:1). The shared-link card.
+      */
+      .stage { justify-content: space-between; }
+      .top { display: flex; align-items: center; justify-content: space-between; }
+      .top .logo-lockup { font-size: 26px; }
+      .body { display: flex; align-items: flex-end; justify-content: space-between; gap: 60px; }
+      .body .kicker { margin-bottom: 18px; }
+      .body .headline { font-size: 54px; max-width: 16ch; }
+      .body .subhead { font-size: 20px; max-width: 26ch; flex: none; }
+      .foot { display: flex; align-items: center; justify-content: space-between; }
+      .foot .annot {
+        font-family: var(--mono); font-size: 14px; letter-spacing: 0.1em;
+        text-transform: uppercase; color: var(--faint);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas fb-link">
+      <div class="stage">
+        <div class="top">
+          <div class="logo-lockup"><span class="wordmark">swel</span></div>
+          <span class="index">01</span>
+        </div>
+
+        <div class="body">
+          <div>
+            <p class="kicker">Kicker · the category</p>
+            <h1 class="headline">
+              <span class="q">The one line this</span>
+              <span class="q">surface exists for.</span>
+            </h1>
+          </div>
+          <p class="subhead">
+            One supporting sentence, set beside the headline rather than under it
+            because a wide canvas has the room.
+          </p>
+        </div>
+
+        <div class="foot">
+          <span class="annot">A fact, not a restatement</span>
+          <span class="tagline">Content infrastructure in motion.</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

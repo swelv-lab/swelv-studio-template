@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>X · square 1080x1080</title>
+    <link rel="stylesheet" href="../../../../brand-kit/brand.css" />
+    <link rel="stylesheet" href="../../_shared/canvas.css" />
+    <style>
+      /* LAYOUT ONLY. The canvas size comes from the preset class on .canvas;
+         every colour and typeface comes from the brand kit. Never set either
+         here, or a rebrand stops being one edit.
+         Canvas: 1080x1080 (1:1).
+      */
+      .stage { justify-content: space-between; }
+      .top { display: flex; align-items: center; justify-content: space-between; }
+      .top .logo-lockup { font-size: 30px; }
+      .body .kicker { margin-bottom: 24px; }
+      .body .headline { font-size: 64px; max-width: 15ch; }
+      .body .subhead { margin-top: 24px; font-size: 22px; }
+      .panel {
+        margin-top: 46px; border: 1px solid var(--line); border-radius: var(--radius);
+        background: var(--panel); padding: 30px 34px; display: flex; gap: 40px;
+      }
+      .stat { flex: 1; }
+      .stat .n {
+        font-family: var(--sans); font-weight: 900; font-size: 50px;
+        line-height: 1; letter-spacing: -0.035em; color: var(--fg);
+      }
+      .stat .n.mark { color: var(--accent); }
+      .stat .l {
+        margin-top: 10px; font-family: var(--mono); font-size: 13px;
+        letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint);
+      }
+      .divider { width: 1px; background: var(--line-soft); }
+      .foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 34px; }
+      .foot .annot {
+        font-family: var(--sans); font-weight: 500; font-size: 18px;
+        line-height: 1.5; color: var(--muted); max-width: 38ch;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="canvas x-square">
+      <div class="stage">
+        <div class="top">
+          <div class="logo-lockup"><span class="wordmark">swel</span></div>
+          <span class="index">01 / 03</span>
+        </div>
+
+        <div class="body">
+          <p class="kicker">Kicker · the category</p>
+          <h1 class="headline">
+            <span class="q">The one line this</span>
+            <span class="q">surface exists for.</span>
+          </h1>
+          <p class="subhead">
+            One supporting sentence. It adds the detail the headline had no room
+            for, and then it stops.
+          </p>
+
+          <!-- Delete the panel if the surface does not need one. Not every card
+               earns furniture, and an empty one reads as a template. -->
+          <div class="panel">
+            <div class="stat">
+              <div class="n">00</div>
+              <div class="l">What the number counts</div>
+            </div>
+            <div class="divider"></div>
+            <div class="stat">
+              <div class="n mark">00%</div>
+              <div class="l">The one you want read first</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="foot">
+          <p class="annot">
+            The closing line carries a fact the reader did not have a second ago.
+            Never a restatement of the headline.
+          </p>
+          <span class="tagline">Content infrastructure in motion.</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

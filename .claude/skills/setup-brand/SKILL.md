@@ -12,9 +12,9 @@ allowed-tools:
 
 # Set up the brand
 
-The studio ships configured for a **fictional demo brand** so a fresh clone
-renders something decent immediately. This skill replaces it with the user's
-real brand. Two files carry everything:
+The studio ships with its publisher's brand filled in, as a worked example of
+a finished brand kit, so a fresh clone renders something real immediately. This
+skill replaces it with the user's own. Two files carry everything:
 
 - `brand-kit/brand.css` — colours, typefaces, geometry (**the look**)
 - `brand-kit/BRAND.md` — voice, positioning, tagline, grounding (**the words**)
@@ -74,11 +74,14 @@ Fill in whatever the fast path didn't answer.
    them shop. Safe, free, and good: `Space Grotesk` + `IBM Plex Mono`,
    `Inter` + `JetBrains Mono`, `Instrument Sans` + `Geist Mono`. All on Google
    Fonts, all with an open licence.
-4. **A logo?** If they have an SVG, take the path and copy it to
-   `brand-kit/logo/mark.svg`, rewriting its fills to `currentColor` so it picks
-   up the ink colour wherever it lands. If they only have a PNG, use it, and say
-   plainly that a vector version would render sharper. **If they have no mark at
-   all, that's fine** — go wordmark-only and delete the `<svg>` from the lockup.
+4. **A logo?** If they have an SVG, copy it to `brand-kit/logo/mark.svg` and
+   run `brand-kit/sync-logo.sh`, which embeds it into `brand.css` as the mask
+   the lockup paints. It is painted as a *mask*, so only the artwork's shape
+   matters — the colour comes from `--mark-ink`. Then set `--mark-order`
+   (before or after the wordmark), `--mark-size`, and `--mark-aspect` (width ÷
+   height, so it is never squashed). If they only have a raster logo, use it and
+   say plainly that a vector renders sharper. **No mark at all is fine** — set
+   `--mark-size: 0` and run wordmark-only.
 5. **Corners and air.** One question, phrased as feel, not numbers: "Sharp and
    editorial, or soft and friendly?" → `--radius: 0` vs `12px` vs `20px`.
 
@@ -93,8 +96,9 @@ Fill in whatever the fast path didn't answer.
   below 3:1 — check, don't eyeball.
 - Update the `@import` at the top to the chosen Google Fonts families, and
   `--sans` / `--mono` to match.
-- Update the comment above each block so it describes *their* brand, not the
-  demo's. These comments are what a future agent reads to make judgement calls.
+- Update the comment above each block so it describes *their* brand rather than
+  the one that shipped. Those comments are what a future agent reads when it has
+  to make a judgement call, so they matter more than they look.
 
 ## Step 3 · The words
 
@@ -127,11 +131,14 @@ Ask, in two or three batches:
 
 **Then rewrite `brand-kit/BRAND.md`** section by section, keeping its structure
 (the skills and every other agent expect those headings). **Delete the
-demo-brand blockquote at the top** — its absence is how every future session
-knows the studio is configured. Replace it with one line naming the brand and
-the date.
+blockquote at the top** — its absence is how every future session knows the
+studio is configured. Replace it with one line naming the brand and the date.
 
-Never leave a section as demo content. If they genuinely don't have an answer,
+Also update `brand-kit/brand.json`: the name, wordmark, tagline, site URL and
+blog path. The essay builder reads it for canonical URLs and structured data, so
+a stale value there ships in the page metadata where nobody looks.
+
+Never leave a section carrying the shipped brand's content. If they genuinely don't have an answer,
 write `*Not defined yet — ask before writing copy that depends on this.*` so an
 agent knows to stop rather than guess.
 
@@ -141,7 +148,7 @@ Don't end on a description. **Show them.**
 
 1. Render an example in their new brand:
    ```bash
-   cd posts && ./render.sh src/_template/starter-card.html
+   cd posts && ./render.sh src/linkedin/_template/portrait.html
    ```
 2. `Read` the PNG so it appears in the conversation, and check it honestly:
    fonts actually loaded (not a fallback), contrast holds, the accent appears
@@ -156,8 +163,10 @@ Don't end on a description. **Show them.**
   `brand.css` to the local `@font-face` block. Remote fonts do not load in time
   during video frame capture and the whole video silently renders in a fallback.
 - **Examples.** Say in plain language that the finished pieces in `examples/`
-  are in the placeholder brand and stay that way on purpose — they're there to
-  show the house style. Offer to delete the folder if they'd rather not have it.
+  stay in the shipped brand on purpose — they're there to show the house style,
+  not to be reused. Say plainly that anything they publish should come out of
+  their own brand kit, and offer to delete `examples/` if they'd rather not have
+  it in the repo at all.
 - **The calendar** still has the sample plan in it. Offer `/calendar` to replace
   it with their own.
 - **Offer to save.** "Want me to upload this so it's set for everyone on the

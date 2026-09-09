@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>swelv studio · explainer</title>
+    <link rel="stylesheet" href="../../brand-kit/brand.css" />
+    <style>
+      /* ---------------------------------------------------------------------
+         LAYOUT + MOTION ONLY. Every colour and typeface comes from the brand
+         kit, same as every other surface in this repo.
+
+         The whole file is one pure function of time: renderFrame(t) paints the
+         frame at t and nothing else. No clocks, no randomness, no CSS
+         animation, so frame 900 is identical on every render.
+      --------------------------------------------------------------------- */
+      .canvas { --w: 1920px; --h: 1080px; }
+      .stage { padding: 0; overflow: hidden; }
+
+      /* -- persistent chrome ------------------------------------------------ */
+      #hdr {
+        position: absolute; left: 64px; right: 64px; top: 52px;
+        display: flex; align-items: center; justify-content: space-between;
+      }
+      #hdr .logo-lockup { font-size: 36px; }
+      #chapter {
+        font-family: var(--mono); font-size: 18px; letter-spacing: 0.2em;
+        text-transform: uppercase; color: var(--faint);
+      }
+      #prog {
+        position: absolute; left: 64px; right: 64px; bottom: 52px; height: 2px;
+        background: var(--line-soft);
+      }
+      #prog i { display: block; height: 100%; width: 0; background: var(--accent); }
+
+      /* -- subtitles (the video has to work muted) -------------------------- */
+      #sub {
+        position: absolute; left: 50%; transform: translateX(-50%);
+        bottom: 96px; width: 1440px; text-align: center;
+        font-family: var(--sans); font-weight: 500; font-size: 35px;
+        line-height: 1.4; color: var(--fg); opacity: 0;
+      }
+
+      /* -- scenes ----------------------------------------------------------- */
+      .scene {
+        position: absolute; inset: 148px 88px 196px; opacity: 0;
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center;
+      }
+
+      /* generic furniture ---------------------------------------------------- */
+      .card {
+        background: var(--panel); border: 1px solid var(--line);
+        border-radius: var(--radius);
+      }
+      .mono { font-family: var(--mono); }
+      .big {
+        font-family: var(--sans); font-weight: 900; font-size: 112px;
+        line-height: 1.05; letter-spacing: -0.04em; color: var(--fg);
+        text-align: center;
+      }
+      .big .o { color: var(--accent); }
+      .lede {
+        margin-top: 26px; font-family: var(--sans); font-weight: 500;
+        font-size: 31px; color: var(--muted); text-align: center;
+      }
+
+      /* terminal ------------------------------------------------------------ */
+      .term {
+        width: 1320px; background: var(--panel); border: 1px solid var(--line);
+        border-radius: 14px; overflow: hidden;
+      }
+      .term .bar {
+        height: 46px; background: var(--panel-2);
+        border-bottom: 1px solid var(--line-soft);
+        display: flex; align-items: center; gap: 9px; padding: 0 18px;
+      }
+      .term .bar i {
+        width: 11px; height: 11px; border-radius: 50%; background: var(--line);
+        display: block;
+      }
+      .term .bar span {
+        margin-left: 12px; font-family: var(--mono); font-size: 14px;
+        color: var(--faint); letter-spacing: 0.06em;
+      }
+      .term .body { padding: 34px 38px; min-height: 240px; }
+      .ln {
+        font-family: var(--mono); font-size: 27px; line-height: 1.85;
+        color: var(--muted); white-space: pre-wrap;
+      }
+      .ln .p { color: var(--accent); }
+      .ln.you { color: var(--fg); }
+      .ln.ai { color: var(--muted); }
+      .cursor { color: var(--accent); }
+
+      /* token rows ----------------------------------------------------------- */
+      .tokrow {
+        display: flex; align-items: center; gap: 24px; padding: 19px 0;
+        border-bottom: 1px solid var(--line-soft);
+      }
+      .tokrow:last-child { border-bottom: 0; }
+      .tokrow .k { font-family: var(--mono); font-size: 25px; color: var(--accent); width: 8.5ch; }
+      .tokrow .v { font-family: var(--mono); font-size: 25px; color: var(--fg); flex: 1; }
+      .tokrow .sw { width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--line); }
+
+      /* mini surface tiles ---------------------------------------------------- */
+      .tile { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); position: relative; }
+      /* Content bars. GLOBAL on purpose: slides, deck cards, essay cards and the
+         week strip all draw their fake content with these, so scoping them to
+         .tile silently blanks four scenes. */
+      .tl { position: absolute; left: 14px; top: 13px; height: 8px; border-radius: 4px; background: var(--accent); }
+      .tb { position: absolute; left: 14px; height: 7px; border-radius: 4px; background: var(--line); }
+      .tcap { position: absolute; left: 0; right: 0; bottom: -34px; text-align: center; font-family: var(--mono); font-size: 15px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); }
+
+      /* slides ---------------------------------------------------------------- */
+      .slide { width: 372px; height: 465px; position: relative; }
+      .slide.sel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+      .row { display: flex; align-items: center; justify-content: center; gap: 30px; }
+
+      /* filmstrip -------------------------------------------------------------- */
+      #strip { display: flex; gap: 10px; }
+      #strip .fr { width: 152px; height: 152px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); position: relative; overflow: hidden; }
+      #strip .fr b { position: absolute; border-radius: 50%; background: var(--accent); display: block; }
+      #wave { display: flex; align-items: flex-end; gap: 7px; height: 124px; }
+      #wave i { width: 9px; background: var(--accent); border-radius: 3px; display: block; height: 4px; }
+
+      /* pipes ------------------------------------------------------------------ */
+      .pill {
+        font-family: var(--mono); font-size: 20px; letter-spacing: 0.08em;
+        text-transform: uppercase; padding: 15px 25px; border-radius: 9px;
+        border: 1px solid var(--line); color: var(--muted); background: var(--panel);
+        white-space: nowrap;
+      }
+      .pill.on { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent); }
+
+      /* calendar --------------------------------------------------------------- */
+      .crow { display: flex; align-items: center; gap: 22px; padding: 17px 26px; border-bottom: 1px solid var(--line-soft); }
+      .crow:last-child { border-bottom: 0; }
+      .box { width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid var(--line); position: relative; flex: none; }
+      .box .tick { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--accent-ink); font-size: 17px; opacity: 0; }
+      .crow .t { font-family: var(--sans); font-weight: 500; font-size: 26px; color: var(--muted); flex: 1; }
+      .crow .d { font-family: var(--mono); font-size: 17px; color: var(--faint); letter-spacing: 0.1em; }
+
+      /* clock ------------------------------------------------------------------- */
+      #clock { width: 210px; height: 210px; }
+    </style>
+  </head>
+  <body>
+    <div class="canvas">
+      <div class="stage">
+        <div id="hdr">
+          <div class="logo-lockup"><span class="wordmark">swel</span></div>
+          <span id="chapter"></span>
+        </div>
+
+        <!-- scenes are built in JS so the repetitive markup stays readable -->
+        <div id="scenes"></div>
+
+        <div id="sub"></div>
+        <div id="prog"><i></i></div>
+      </div>
+    </div>
+    <script src="timings.js"></script>
+    <script src="timeline.js"></script>
+  </body>
+</html>
