@@ -1,6 +1,6 @@
 # The logo metamorphosis
 
-One lockup, two worlds, and a mark that arrives on water. 15 seconds: an 8.5s
+One lockup, three worlds, and a mark that arrives on water. 16 seconds: a 9.4s
 story and a 6.5s ender, 1920×1080, made with this studio.
 
 `rendered/logo-metamorphosis.mp4` · 1920×1080 · 30fps · ~8 MB
@@ -13,11 +13,16 @@ FAST=1 ./render.sh   # half frame rate, for checking a change
 ## What it does
 
 The wordmark is **written**, not faded in — real script letterforms uncovered
-along each letter's own pen route. Then the paper burns off into 1984 and the
-same lockup plays like an arcade attract screen: the floor scrolls at you, the
-logo slams in, the chrome runs, the scanlines roll. It cools to bare navy and
-the ender takes over: the mark hits a still lattice and the shockwave rides out
-through it.
+along each letter's own pen route. Then the sunset rises up over the paper and
+the lockup **turns over like a card**, going in as ink and coming back as chrome,
+and the same lockup plays like an arcade attract screen: the floor scrolls at
+you, the logo slams in, the chrome runs, the scanlines roll. Then **the machine
+is switched off** — the whole screen collapses to a bright line and a dot, the
+way a CRT does — and a press runs: the blue plate drops and lands, the orange
+plate drops and lands a beat later, slightly off, and the halftone prints in
+from the foot of the sheet while the drum turns. The sheet is pulled off, the
+ground drains to navy, and the ender takes over: the mark hits a still lattice
+and the shockwave rides out through it.
 
 ## The pattern worth stealing: interpolate state, not pictures
 
@@ -49,6 +54,46 @@ deterministic under `seek(t)` and the render would not be reproducible. The
 interpolation happens in JS and is pushed into the same properties a transition
 would have driven.
 
+## The other pattern worth stealing: sequence with GSAP, render by hand
+
+The tweens are not the hard part of a film like this — the *sequencing* is. A
+film with thirty overlapping gestures wants a real timeline, with named
+positions, eases that overshoot, and staggers, rather than thirty hand-written
+`lin()`/`ease()` pairs that all have to be re-timed together when one beat moves.
+
+So the story runs on **GSAP**, vendored at `posts/vendor/gsap.min.js`. It fits
+this renderer where wall-clock libraries cannot: a **paused** timeline is
+seekable and pure. `tl.seek(t)` renders the exact state at *t* with no clock
+involved, so `window.seek` is still a pure function of time and every frame is
+still reproducible. The shape is:
+
+```js
+const cur = { bg:"rgb(244,239,228)", vm:0, lockY:0, … };   // the state
+const tl  = gsap.timeline({ paused:true });
+tl.to(cur, { bg:"rgb(7,10,28)", vm:1, duration:0.9, ease:"power2.inOut" }, 2.95)
+  .to(lockEl, { rotationY:92, duration:0.24, ease:"power2.in" }, 3.30)
+  …
+window.seek = t => { tl.seek(t, true); apply(cur); post(t); };
+```
+
+GSAP tweens numbers and colour strings on a plain object, and transforms and
+clip-paths on elements directly; `apply()` turns the object into CSS custom
+properties, exactly as before. Two things it took breaking to learn:
+
+- **Never write `style.transform` on an element GSAP is transforming.** It stamps
+  over GSAP's value every frame. The sun's rise used to be a direct style write,
+  and the CRT-off collapsed the sky while the sun and floor just sat there.
+  Everything on those elements now goes through `gsap.set`, so the rise and the
+  collapse compose.
+- **`tl.seek(t, true)` suppresses callbacks**, so an `onUpdate` on a tween never
+  fires under seek. Anything heavy — here, 5,760 halftone dots — tweens a
+  *number* on the state object and is applied after the seek, not from inside
+  the tween.
+
+Why not Framer Motion, or any React animation library? Same reason as CSS
+`transition`: they are driven by a clock, and a frame that depends on the clock
+is not a frame you can render twice.
+
 ## Why two clips
 
 The ender is this brand's reusable sign-off — it gets concatenated onto other
@@ -73,7 +118,8 @@ Nothing here gets an exemption for being the showpiece:
 - **The sound is synthesized from a JSON file** — `metamorphosis.audio.json`
   and `ender.audio.json`, laid by `posts/render-audio.js`. Each world has its
   own voice: a nib scratch per pen stroke, a gated stab and an arpeggio for the
-  arcade, a deep strike as the mark hits the water.
+  arcade, a zap as the tube collapses and one thock per plate as the press
+  runs, a deep strike as the mark hits the water.
 - **It works muted.** The picture carries it; the sound is the finish.
 - **Layout only in each file's own `<style>`.** Colours come from the state
   objects, so a rebrand is an edit to those and nothing else.

@@ -124,9 +124,10 @@ Three properties make it hold together:
    being one edit. Everything you see in the screenshot above was a dark navy
    fintech brand until one file changed.
 3. **Video is just stills.** An animated post is HTML that draws frame `t` as a
-   pure function of `t`. Chrome screenshots every frame, ffmpeg encodes it, and
-   the sound is synthesized from a small JSON cue file. No editor, no timeline
-   app, no assets to license.
+   pure function of `t` — sequenced with a paused GSAP timeline when there is a
+   lot going on, by hand when there is not. Chrome screenshots every frame,
+   ffmpeg encodes it, and the sound is synthesized from a small JSON cue file.
+   No editor, no timeline app, no assets to license.
 
 ## Requirements
 
