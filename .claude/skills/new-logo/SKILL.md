@@ -110,3 +110,9 @@ Two things that matter more than the motion itself:
   wall-clock driven, so it will not be deterministic under `seek(t)`. Do the
   interpolation in JS and push the result into the same properties a transition
   would have driven.
+- **Sequence it on GSAP, as a paused timeline.** For the joins between worlds —
+  the moves, the drops, the collapses — write a `gsap.timeline({ paused:true })`
+  and have `window.seek(t)` call `tl.seek(t, true)` then apply the state. That is
+  still a pure function of `t`. Never a clock-driven library (Framer Motion) and
+  never `style.transform` on an element GSAP owns. See the `new-video` skill's
+  *Sequencing with GSAP* and `examples/logo-metamorphosis/`.

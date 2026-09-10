@@ -190,8 +190,11 @@ exception is a film for a web player with a full-screen button, where
 Five rules, and they are not negotiable:
 
 1. **Every frame is a pure function of `t`.** No `Date.now()`, no randomness, no
-   `requestAnimationFrame`, no CSS animation. Called twice with the same `t` it
-   must paint identically — that is what makes a render reproducible.
+   `requestAnimationFrame`, no CSS animation, no wall-clock animation library.
+   Called twice with the same `t` it must paint identically — that is what makes
+   a render reproducible. The one library allowed is **GSAP as a paused,
+   seeked timeline** (vendored in `posts/vendor/`), because that is still a pure
+   function of `t`.
 2. **Support both drivers.** Expose `window.renderFrame(t)` *and* honour a `#t`
    URL hash. One path is the fast renderer, the other the fallback; supporting
    only one silently renders frame 0 three hundred times.

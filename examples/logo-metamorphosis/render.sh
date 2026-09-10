@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------
-# Build the logo metamorphosis: an 8.5s story, then a 6.5s ender, concatenated.
+# Build the logo metamorphosis: a 9.4s story, then a 6.5s ender, concatenated.
 #
 #   ./render.sh          # the whole chain, about two minutes
 #   FAST=1 ./render.sh   # half frame rate, for checking a change
@@ -23,7 +23,7 @@ ROOT="$(cd ../.. && pwd)"
 FPS="${FPS:-30}"
 [ -n "${FAST:-}" ] && FPS=15
 
-STORY=8.5
+STORY=9.4
 ENDER=6.5
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT

@@ -1,36 +1,41 @@
 <!doctype html>
 <!-- ---------------------------------------------------------------------------
-  swelv studio · the metamorphosis (1920x1080 @ 30fps, 13.4s + the 6s wide ender)
+  the logo metamorphosis · story (1920x1080 @ 30fps, 9.4s, then the 6.5s ender)
 
-  ONE lockup. It never moves, never gets replaced, and is never cross-faded.
-  It is a single SVG - a hand-drawn monoline skeleton of "swel" plus the V -
-  and the film morphs it by INTERPOLATING STATE: ~30 numbers (colours as RGB
-  triples, stroke weights, blur radii, glow strengths, slant, and the V's own
-  Bezier coordinates) are lerped between four keyframe states and written to
-  CSS custom properties on .stage every frame. Everything downstream reads
-  those variables, so the letters genuinely change material rather than one
-  picture dissolving into another.
+  ONE lockup. It never moves, is never replaced, and is never cross-faded. It
+  is a single SVG — a hand-drawn "swel" plus the V — and the film changes its
+  MATERIAL by interpolating state: colours, stroke weights, glow, the V's own
+  Bezier coordinates. Everything downstream reads those values, so the letters
+  genuinely become something else rather than one picture dissolving into the
+  next.
 
-  CSS transitions cannot be used here: they are wall-clock driven and would not
-  be deterministic under window.seek(t). The interpolation is therefore done in
-  JS and pushed into the same custom properties a transition would have driven.
+  Three worlds, and the joins between them are PHYSICAL:
 
-  The four states:
-    hand   - cream paper, real Caveat written by the pen, ink wobble
-    neon   - 1984, played like an arcade attract screen: the grid scrolls at
-             you, the logo slams in with a flash, the chrome runs, scanlines roll
-    final  - bare navy, the real swelv letterforms at the exact size and
-             position the wide ender uses, so the ender's crest-drop reads as
-             this logo re-forming.
+    hand → neon   the sunset rises up over the paper; the lockup turns over like
+                  a card and comes back as chrome, the V morphing the whole way
+    neon → press  the machine is switched off — the screen collapses to a bright
+                  line, then a dot, the way a CRT does. Then the press runs: the
+                  blue plate drops and lands, the orange drops and lands a beat
+                  later, slightly off; the halftone prints in from the foot
+    press → end   the sheet is pulled off the press and the ground drains to
+                  navy. The ender opens on that navy and its mark lands on the
+                  water — one film, not two.
 
-  The V is the constant inside the constant: its crest and swell are written as
-  two cubics each, so the hand-drawn bowed V morphs into the geometric brand V
-  by lerping 14 numbers per path. No shape is ever swapped.
+  SEQUENCING IS GSAP. A PAUSED timeline is seekable and pure: tl.seek(t) renders
+  the exact state at t with no clock involved, so window.seek stays a pure
+  function of time and every frame is reproducible. This is the only kind of
+  animation library the pipeline can use — anything wall-clock driven (CSS
+  transitions, Framer Motion, a ticker) would break that rule. The library is
+  vendored at ../../posts/vendor/gsap.min.js; the render never touches the
+  network.
 
-  Everything around the lockup - paper grain, colour field, sun, grid,
-  scanlines, the "studio" qualifier - enters and leaves. The lockup does not.
+  Two rules that come with it, both learned by breaking them:
+    · never write style.transform on an element GSAP is transforming — it stamps
+      over GSAP's value every frame. Route everything through gsap.set.
+    · tl.seek(t, true) suppresses callbacks, so an onUpdate never fires under
+      seek. Heavy reveals tween a NUMBER on a plain object; apply() reads it.
 
-  Render:  ./capture.sh   Output: swelv-studio-logo/output/film/studio-logo-video.mp4
+  Render: ./render.sh   Sound: metamorphosis.audio.json, laid by render-audio.js
 ---------------------------------------------------------------------------- -->
 <html lang="en">
 <head>
@@ -38,7 +43,8 @@
 <style>
   @font-face { font-family:"Caveat";          src:url("fonts/caveat-500.woff2") format("woff2");        font-weight:500; font-display:block }
   @font-face { font-family:"Share Tech Mono"; src:url("fonts/sharetechmono-400.woff2") format("woff2"); font-weight:400; font-display:block }
-  @font-face { font-family:"Audiowide"; src:url("fonts/audiowide-400.woff2") format("woff2"); font-weight:400; font-display:block }
+  @font-face { font-family:"Audiowide";       src:url("fonts/audiowide-400.woff2") format("woff2");     font-weight:400; font-display:block }
+  @font-face { font-family:"Satoshi";         src:url("fonts/Satoshi-Bold.otf") format("opentype");     font-weight:700; font-display:block }
 
   * { margin:0; padding:0; box-sizing:border-box }
   html, body { width:1920px; height:1080px; overflow:hidden; background:#0a0e27 }
@@ -49,8 +55,8 @@
     --bg:#f4efe4; --ink:#1b2430; --vink:#e2500a;
     --w:7.5; --vw:12.5; --sw:7.5; --swo:0.5;
     --grain:0.22; --sky:0; --grid:0; --scan:0; --bloom:0;
-    --bevel:0; --realop:0; --skelop:1; --slant:-8; --lockblur:0; --spread:1;
     --wordop:0; --handop:1; --face:"Audiowide"; --fw:800; --fs:72px;
+    --dots:0; --qp:0;
   }
   .scene { position:absolute; inset:0 }
   .layer { position:absolute; inset:0; pointer-events:none }
@@ -72,13 +78,18 @@
   #scan   { opacity:var(--scan); background:repeating-linear-gradient(180deg, rgba(0,0,0,.34) 0 1px, rgba(0,0,0,0) 1px 4px) }
   #bloom  { position:absolute; left:50%; top:508px; width:1200px; height:560px; margin:-280px 0 0 -600px; border-radius:50%;
             opacity:var(--bloom); background:radial-gradient(closest-side, rgba(255,120,30,.32), rgba(255,61,90,.09) 55%, rgba(0,0,0,0) 78%) }
+  /* PRESS · the halftone is real dots, one circle each, so the band can print
+     in row by row and the dots can swell in a wave as the drum turns. A tiled
+     background can only scroll, and scrolling is not a press running. */
+  #dots   { top:auto; height:300px; opacity:var(--dots); mix-blend-mode:multiply }
+  #dots svg { position:absolute; inset:0; width:100%; height:100% }
+  /* the CRT switching off: everything collapses to this line, then to nothing */
+  #crt    { position:absolute; left:0; right:0; top:50%; height:4px; margin-top:-2px; background:#fff;
+            opacity:0; box-shadow:0 0 18px 6px rgba(255,220,180,.9) }
 
-  /* ── the constant · exactly the wide ender's lockup box, never moves ──── */
+  /* ── the constant · exactly the ender's lockup box, never moves ────────── */
   #lockup { position:absolute; top:405px; left:50%; margin-left:-300px; width:600px }
   #lockup svg { display:block; overflow:visible; width:600px }
-  #skel  { fill:none; stroke:var(--ink); stroke-width:var(--w); stroke-linecap:round; stroke-linejoin:round; opacity:var(--skelop) }
-  #bevel { fill:none; stroke:#fff; stroke-width:calc(var(--w)*0.16); stroke-linecap:round; stroke-linejoin:round; opacity:var(--bevel) }
-  /* the typeset states — only the face and the fill change between them */
   #gHand { opacity:var(--handop) }
   #word  { fill:var(--ink); opacity:var(--wordop); font-family:var(--face); font-weight:var(--fw); font-size:var(--fs) }
   #vmk   { fill:none; stroke-linecap:round; stroke-linejoin:round }
@@ -91,6 +102,9 @@
   #qualNeon { position:absolute; top:648px; left:0; right:0; text-align:center;
               font-family:"Share Tech Mono",monospace; font-size:26px; letter-spacing:.86em; text-indent:.86em;
               text-transform:uppercase; color:#ffe3b6; text-shadow:0 0 18px rgba(255,140,40,.95), 0 0 44px rgba(255,90,10,.6) }
+  #qualPress { position:absolute; top:648px; left:0; right:0; text-align:center; opacity:var(--qp);
+               font-family:"Share Tech Mono",monospace; font-size:26px; letter-spacing:.46em; text-indent:.46em;
+               text-transform:uppercase; color:#2b3a8f; mix-blend-mode:multiply }
 </style>
 </head>
 <body>
@@ -125,9 +139,12 @@
   <div class="layer" id="scan"></div>
   <div class="layer" id="flash"></div>
   <div id="bloom"></div>
+  <div class="layer" id="dots"></div>
+  <div id="crt"></div>
 
   <div id="qualHand">studio</div>
   <div id="qualNeon">Studio</div>
+  <div id="qualPress">swelv studio</div>
 
   <!-- THE CONSTANT -->
   <div id="lockup">
@@ -161,12 +178,11 @@
 
 </div></div>
 
+<script src="../../posts/vendor/gsap.min.js"></script>
 <script>
-const DUR = 8.5;
-
+const DUR = 9.4;
 
 /* ── the V, as two cubics per path, so it MORPHS rather than swaps ──────── */
-/*    [x0,y0, c1x,c1y,c2x,c2y,x1,y1, c3x,c3y,c4x,c4y,x2,y2]                  */
 const V = {
   handC:  [27,22, 37,44,   50,69,   61,86, 71,68,   82,44,   93,23],
   geoC:   [30,24, 40,43.33,50,62.67,60,82, 70,62.67,80,43.33,90,24],
@@ -175,176 +191,187 @@ const V = {
 };
 const dOf = a => `M ${a[0]} ${a[1]} C ${a[2]} ${a[3]}, ${a[4]} ${a[5]}, ${a[6]} ${a[7]} C ${a[8]} ${a[9]}, ${a[10]} ${a[11]}, ${a[12]} ${a[13]}`;
 
-/* ── the four states · every value here is interpolated ─────────────────── */
-const ST = {
-  hand: { bg:[244,239,228], ink:[27,36,48], vink:[226,80,10],
-          w:7.5, vw:12.5, sw:7.5, swo:0.5, grain:0.22, sky:0, grid:0, scan:0, bloom:0,
-          bevel:0, skelop:0, wordop:0, handop:1, vop:0, fs:72, slant:0, lockblur:0, spread:1, wob:2.2, sunY:0, chrome:0,
-          crest:V.handC, swell:V.handS, qh:1, qn:0 },
-  neon: { bg:[7,10,28], ink:[255,214,138], vink:[255,180,80],
-          w:12, vw:13, sw:9, swo:0.75, grain:0, sky:1, grid:1, scan:1, bloom:1,
-          bevel:0, skelop:0, wordop:1, handop:0, vop:1, fs:60, slant:0, lockblur:0, spread:1, wob:0, sunY:1, chrome:1,
-          crest:V.geoC, swell:V.geoS, qh:0, qn:1 },
-  /* the story cools to bare navy and stops. The ender delivers the lockup —
-     showing it here as well is the logo twice. */
-  off:  { bg:[10,14,39], ink:[255,255,255], vink:[255,81,0],
-          w:12, vw:12.5, sw:10, swo:0.5, grain:0, sky:0, grid:0, scan:0, bloom:0,
-          bevel:0, skelop:0, wordop:0, handop:0, vop:0, fs:66, slant:0, lockblur:0, spread:1, wob:0, sunY:0, chrome:0,
-          crest:V.geoC, swell:V.geoS, qh:0, qn:0 },
+/* ── the state · one object GSAP tweens, and apply() renders ──────────────
+   Colours are CSS strings — GSAP interpolates those natively. vm is the V's
+   morph, 0 = the hand-drawn bowed V, 1 = the geometric one. lockY and blueY
+   are the two press plates' positions in px, kept separate so they can drop
+   and land on their own. */
+const cur = {
+  bg:"rgb(244,239,228)", ink:"rgb(27,36,48)", vink:"rgb(226,80,10)",
+  w:7.5, vw:12.5, sw:7.5, swo:0.5, grain:0.22, sky:0, grid:0, scan:0, bloom:0,
+  wordop:0, handop:1, vop:0, wob:2.2, sunY:0, chrome:0, vm:0,
+  qh:1, qn:0, qp:0, dots:0, dotsIn:0, plate:0, face:"hand", lockY:0, blueY:0,
 };
-
-/* ── the schedule · morphs and holds ────────────────────────────────────── */
-const SEG = [
-  [0.00, 3.10, "hand", "hand"],   // written, then held
-  [3.10, 4.30, "hand", "neon"],   // the paper burns off into 1984
-  [4.30, 6.60, "neon", "neon"],   // the attract screen plays
-  [6.60, 7.70, "neon", "off"],    // the machine powers down
-  [7.70, 8.50, "off",  "off"],
-];
-/* cues the sound mode mirrors */
-const CUE = { write:[0.35,2.15], vDraw:[2.15,2.62], under:[2.55,2.88],
-              m1:[3.10,4.30], m2:[4.30,6.60], m3:[6.60,7.70], fade:[7.75,8.25] };
+const FACE = { hand:['"Audiowide"',400,72], neon:['"Audiowide"',400,60], press:['"Satoshi"',700,74] };
 
 const clamp01 = x => Math.max(0, Math.min(1, x));
 const lin = (t,a,b) => clamp01((t-a)/(b-a));
 const eio = x => x<0.5 ? 4*x*x*x : 1 - Math.pow(-2*x+2,3)/2;
 const eoq = x => 1 - Math.pow(1-x,4);
 const L = (a,b,p) => a + (b-a)*p;
-const Lc = (a,b,p) => `rgb(${Math.round(L(a[0],b[0],p))},${Math.round(L(a[1],b[1],p))},${Math.round(L(a[2],b[2],p))})`;
 const La = (a,b,p) => a.map((v,i)=>L(v,b[i],p));
+const rgb = s => s.match(/[\d.]+/g).slice(0,3).map(Number);
+const Lc = (a,b,p) => `rgb(${Math.round(L(a[0],b[0],p))},${Math.round(L(a[1],b[1],p))},${Math.round(L(a[2],b[2],p))})`;
 
 const $ = id => document.getElementById(id);
 const stage=$("stage"), scene=$("scene"), sun=$("sun"), wobMap=$("wobMap");
-const vcrest=$("vcrest"), vswell=$("vswell");
-const qh=$("qualHand"), qn=$("qualNeon");
+const vcrest=$("vcrest"), vswell=$("vswell"), qh=$("qualHand"), qn=$("qualNeon");
 const hcrest=$("hcrest"), hswell=$("hswell"), hunder=$("hunder");
 const word=$("word"), lockEl=$("lockup"), chromeGrad=$("chrome"), floorG=$("hzg"), flash=$("flash");
-/* the floor's horizontals, rebuilt each frame so the grid scrolls at you */
 const NHZ = 11;
 const hzLines = Array.from({length: NHZ}, () => {
   const l = document.createElementNS("http://www.w3.org/2000/svg","line");
-  l.setAttribute("x1",0); l.setAttribute("x2",1920);
-  l.setAttribute("stroke","#ff6a12"); l.setAttribute("stroke-width",2);
+  l.setAttribute("x1",0); l.setAttribute("x2",1920); l.setAttribute("stroke","#ff6a12"); l.setAttribute("stroke-width",2);
   floorG.appendChild(l); return l;
 });
 const wmPaths=[...$("wm").querySelectorAll("path")];
-
-
-/* sun slats, built once — thin at the top, thick at the bottom */
 (function(){ let y=540*0.42; for(let i=0;i<14;i++){ const h=(3+i*1.7)*(540/470);
   const e=document.createElement("i"); e.style.top=y+"px"; e.style.height=h+"px"; sun.appendChild(e);
   y += h + Math.max(5,20-i*1.15)*(540/470); } })();
-
-/* the chrome gradient's five stops are themselves interpolated, from flat ink
-   (no chrome) to the banded metal — so the stroke gains its finish, not a new
-   element carrying one */
 const CH = [$("c0"),$("c1"),$("c2"),$("c3"),$("c4")];
 const CH_ON = [[255,246,226],[180,97,28],[255,255,255],[255,180,87],[168,58,8]];
 
+/* the press's dots: a real grid of circles over the foot of the sheet */
+const DOT = { cols: 192, rows: 30, pitch: 10, els: [] };
+{ const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+  svg.setAttribute("viewBox", "0 0 1920 300");
+  for (let r = 0; r < DOT.rows; r++) for (let c = 0; c < DOT.cols; c++) {
+    const e = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    e.setAttribute("cx", c * DOT.pitch + 5); e.setAttribute("cy", r * DOT.pitch + 5);
+    e.setAttribute("fill", "#2b3a8f"); e.setAttribute("r", 0);
+    svg.appendChild(e); DOT.els.push(e);
+  }
+  $("dots").appendChild(svg); }
+
+/* ── apply: the state → the DOM ─────────────────────────────────────────── */
 function apply(s){
   const st = stage.style;
-  st.setProperty("--bg",   `rgb(${s.bg.map(Math.round).join(",")})`);
-  st.setProperty("--ink",  `rgb(${s.ink.map(Math.round).join(",")})`);
-  st.setProperty("--vink", `rgb(${s.vink.map(Math.round).join(",")})`);
-  ["w","vw","sw","swo","grain","sky","grid","scan","bloom","bevel","skelop","wordop","handop","lockblur"]
-    .forEach(k => st.setProperty("--"+k, s[k]));
+  st.setProperty("--bg", s.bg); st.setProperty("--ink", s.ink); st.setProperty("--vink", s.vink);
+  ["w","vw","sw","swo","grain","sky","grid","scan","bloom","wordop","handop","dots","qp"].forEach(k => st.setProperty("--"+k, s[k]));
   wobMap.setAttribute("scale", s.wob.toFixed(2));
-  vcrest.setAttribute("d", dOf(s.crest));
-  vswell.setAttribute("d", dOf(s.swell));
-  /* the hand phase draws its own V with the pen; the shared one takes over
-     the moment the ink stops being ink */
-  document.getElementById("vmk").style.opacity = s.vop;
-  hcrest.setAttribute("d", dOf(V.handC));
-  hswell.setAttribute("d", dOf(V.handS));
-  sun.style.transform = `translateY(${(1-s.sunY)*560}px)`;
-  $("floor").style.transform = `translateY(${(1-s.sunY)*429}px)`;
+  vcrest.setAttribute("d", dOf(La(V.handC, V.geoC, s.vm))); vswell.setAttribute("d", dOf(La(V.handS, V.geoS, s.vm)));
+  $("vmk").style.opacity = s.vop;
+  hcrest.setAttribute("d", dOf(V.handC)); hswell.setAttribute("d", dOf(V.handS));
+  /* through GSAP, not style.transform: the CRT-off scales these same elements,
+     and a direct style write here would stamp over that scale every frame */
+  gsap.set(sun, { y: (1-s.sunY)*560 }); gsap.set($("floor"), { y: (1-s.sunY)*429 });
   qh.style.opacity = s.qh; qn.style.opacity = s.qn;
-  /* the metal: stops lerp from the ink colour to the chrome bands */
-  CH.forEach((el,i)=> el.setAttribute("stop-color", Lc(s.ink, CH_ON[i], s.chrome)));
-  st.setProperty("--fs", s.fs.toFixed(1) + "px");
-  /* the face is a discrete swap, made under the cover of the morph blur */
-  st.setProperty("--face", '"Audiowide"');
-  st.setProperty("--fw", 400);
-  const inkC = `rgb(${s.ink.map(Math.round).join(",")})`;
-  document.getElementById("word").style.fill = s.chrome > 0.02 ? "url(#chrome)" : inkC;
-  /* the neon bloom rides on the same stroke rather than a separate glow layer */
+  const ink = rgb(s.ink);
+  CH.forEach((el,i)=> el.setAttribute("stop-color", Lc(ink, CH_ON[i], s.chrome)));
+  const f = FACE[s.face];
+  st.setProperty("--face", f[0]); st.setProperty("--fw", f[1]); st.setProperty("--fs", f[2] + "px");
+  word.style.fill = s.chrome > 0.02 ? "url(#chrome)" : s.ink;
   const g = s.bloom;
-  const lk = document.getElementById("lockup");
+  /* the blue plate is the lockup's own hard offset copy. Its position is
+     absolute (blueY) while the lockup's is lockY, so the two can drop and land
+     separately; the offset the filter needs is just the difference. */
+  const pdy = s.blueY - s.lockY + 6;
+  const plate = s.plate > 0.01 ? `drop-shadow(-7px ${pdy.toFixed(1)}px 0 rgba(43,58,143,${(0.92*s.plate).toFixed(3)})) ` : "";
   const depth = g > 0.02
-    ? `drop-shadow(0 0 ${3*g}px rgba(6,4,18,.98)) drop-shadow(0 0 ${14*g}px rgba(6,4,18,.85)) drop-shadow(0 0 ${26*g}px rgba(255,110,20,.6))`
-    : (s.bevel > 0.02 ? `drop-shadow(0 ${9*s.bevel}px ${18*s.bevel}px rgba(4,8,30,.5))` : "");
-  lk.style.filter = (s.lockblur > 0.01 ? `blur(${s.lockblur}px) ` : "") + depth;
+    ? `drop-shadow(0 0 ${3*g}px rgba(6,4,18,.98)) drop-shadow(0 0 ${14*g}px rgba(6,4,18,.85)) drop-shadow(0 0 ${26*g}px rgba(255,110,20,.6))` : "";
+  lockEl.style.filter = plate + depth;
 }
 
-function blend(A,B,p){
-  const o={};
-  for (const k in A) o[k] = Array.isArray(A[k])
-    ? (k==="bg"||k==="ink"||k==="vink" ? La(A[k],B[k],p) : La(A[k],B[k],p))
-    : L(A[k],B[k],p);
-  return o;
-}
+/* ── THE TIMELINE ─────────────────────────────────────────────────────────── */
+const NEON = [$("sky"), $("sun"), $("hz"), $("floor"), $("scan"), $("bloom"), $("qualNeon")];
+gsap.set(NEON, { transformOrigin: "50% 50%" });
+gsap.set(lockEl, { transformPerspective: 1100, transformOrigin: "50% 50%" });
+gsap.set($("sky"), { clipPath: "inset(100% 0 0 0)" });
 
-window.seek = function(t){
-  /* which segment, and how far through it */
-  let seg = SEG[SEG.length-1];
-  for (const s of SEG) if (t >= s[0] && t < s[1]) { seg = s; break; }
-  const raw = lin(t, seg[0], seg[1]);
-  const p = eio(raw);
-  const st2 = blend(ST[seg[2]], ST[seg[3]], seg[2]===seg[3] ? 0 : p);
-  if (seg[2] !== seg[3]) st2.lockblur = 9 * Math.sin(Math.PI * raw);
-  apply(st2);
+const tl = gsap.timeline({ paused: true, defaults: { overwrite: false } });
+const NEON_C  = { bg:"rgb(7,10,28)", ink:"rgb(255,214,138)", vink:"rgb(255,180,80)", w:12, vw:13, sw:9, swo:0.75, grain:0 };
+const PRESS_C = { bg:"rgb(242,236,224)", ink:"rgb(232,72,10)", vink:"rgb(232,72,10)", w:12, vw:12.5, sw:10, swo:0.55, grain:0.30 };
 
-  /* the pen writes: each Caveat letter is uncovered by a stroke running along
-     that letter's own pen route, so the ink appears the way it was written */
+/* 1 · HAND → NEON @2.95 — the sunset rises up over the paper; the lockup turns
+   over like a card and comes back as chrome; the V morphs the whole way. */
+tl.to(cur, { ...NEON_C, duration: 0.9, ease: "power2.inOut" }, 2.95)
+  .set(cur, { sky: 1 }, 2.95)
+  .to($("sky"), { clipPath: "inset(0% 0 0 0)", duration: 0.85, ease: "expo.out" }, 2.95)
+  .to(cur, { sunY: 1, duration: 0.90, ease: "expo.out" }, 3.02)
+  .to(cur, { grid: 1, duration: 0.45, ease: "power2.out" }, 3.15)
+  .to(cur, { vm: 1, wob: 0, duration: 0.55, ease: "power2.inOut" }, 3.28)
+  .to(lockEl, { rotationY: 92, duration: 0.24, ease: "power2.in" }, 3.30)
+  .set(cur, { face: "neon", handop: 0, wordop: 1, vop: 1, qh: 0 }, 3.54)
+  .set(lockEl, { rotationY: -92 }, 3.54)
+  .to(lockEl, { rotationY: 0, duration: 0.34, ease: "back.out(1.7)" }, 3.54)
+  .to(cur, { chrome: 1, duration: 0.45, ease: "power2.out" }, 3.54)
+  .to(cur, { scan: 1, bloom: 1, qn: 1, duration: 0.40 }, 3.62)
+  .fromTo(lockEl, { scale: 1.30 }, { scale: 1, duration: 0.52, ease: "expo.out" }, 3.86);
+
+/* 2 · NEON → PRESS @5.85 — the machine is switched off: the screen collapses
+   to a line, then a dot. The press runs: blue plate drops and lands, orange
+   drops and lands a beat later, the halftone prints in from the foot. */
+tl.to([...NEON, lockEl], { scaleY: 0.006, duration: 0.26, ease: "expo.in" }, 5.85)
+  .to($("crt"), { opacity: 1, duration: 0.05 }, 6.06)
+  .to([...NEON, lockEl], { scaleX: 0, duration: 0.14, ease: "power3.in" }, 6.11)
+  .to($("crt"), { scaleX: 0, opacity: 0, duration: 0.16, ease: "power3.in" }, 6.12)
+  .to(cur, { ...PRESS_C, duration: 0.20, ease: "power2.out" }, 6.24)
+  .set(cur, { sky: 0, grid: 0, scan: 0, bloom: 0, chrome: 0, qn: 0, sunY: 0, face: "press" }, 6.28)
+  .set(NEON, { scaleX: 1, scaleY: 1 }, 6.30)
+  .set(lockEl, { scaleX: 1, scaleY: 1, rotationY: 0 }, 6.30)
+  .set(cur, { lockY: -340, blueY: -340, plate: 1 }, 6.30)
+  .to(cur, { blueY: 0, duration: 0.44, ease: "back.out(1.6)" }, 6.44)      /* plate one lands ~6.86 */
+  .to(cur, { lockY: 0, duration: 0.44, ease: "back.out(1.6)" }, 6.58)      /* plate two lands ~7.00 */
+  .set(cur, { dots: 1 }, 6.70)
+  .to(cur, { dotsIn: 1, duration: 0.62, ease: "power2.out" }, 6.70)
+  .to(cur, { qp: 1, duration: 0.22 }, 7.06);
+
+/* 3 · PRESS → THE ENDER @8.30 — the sheet is pulled off the press, the ground
+   drains to the ender's navy, and the ender's mark lands on the water. */
+tl.to(cur, { blueY: -360, duration: 0.34, ease: "power3.in" }, 8.30)
+  .to(cur, { lockY: -360, duration: 0.36, ease: "power3.in" }, 8.36)
+  .to(cur, { qp: 0, duration: 0.18 }, 8.35)
+  .to(cur, { dotsIn: 0, duration: 0.42, ease: "power2.in" }, 8.36)
+  .to(cur, { bg: "rgb(10,14,39)", grain: 0, duration: 0.5, ease: "power2.inOut" }, 8.45)
+  .set(cur, { plate: 0, wordop: 0, vop: 0, dots: 0 }, 8.74);
+/* bare navy from ~8.95 to 9.4; the ender opens on the same navy */
+
+/* ── post: the pure-function-of-t things that never needed a tween ─────────── */
+const CUE = { write:[0.35,2.15], vDraw:[2.15,2.62], under:[2.55,2.88] };
+function post(t){
   const wp = lin(t, CUE.write[0], CUE.write[1]);
   wmPaths.forEach((path,i)=>{
-    const a=i/wmPaths.length, b=(i+1)/wmPaths.length;
-    const lp = eoq(clamp01((wp-a)/(b-a)));
+    const a=i/wmPaths.length, b=(i+1)/wmPaths.length, lp = eoq(clamp01((wp-a)/(b-a)));
     if (!path._L) path._L = path.getTotalLength();
-    path.style.strokeDasharray = path._L;
-    path.style.strokeDashoffset = path._L*(1-lp);
+    path.style.strokeDasharray = path._L; path.style.strokeDashoffset = path._L*(1-lp);
   });
-  /* the V is drawn by the same pen, tip to tip */
-  const vp = eoq(lin(t, CUE.vDraw[0], CUE.vDraw[1]));
-  const sp = eoq(lin(t, CUE.vDraw[0]+0.35, CUE.vDraw[1]+0.25));
-  [[hcrest,vp],[hswell,sp]].forEach(([el,q])=>{
-    const l = el.getTotalLength();
-    el.style.strokeDasharray = l; el.style.strokeDashoffset = l*(1-q);
-  });
-  /* the qualifier is written after the mark, and is content: it leaves */
+  const vp = eoq(lin(t, CUE.vDraw[0], CUE.vDraw[1])), sp = eoq(lin(t, CUE.vDraw[0]+0.35, CUE.vDraw[1]+0.25));
+  [[hcrest,vp],[hswell,sp]].forEach(([el,q])=>{ const l = el.getTotalLength(); el.style.strokeDasharray = l; el.style.strokeDashoffset = l*(1-q); });
   { const l = hunder.getTotalLength(), q = eio(lin(t, CUE.under[0], CUE.under[1]));
     hunder.style.strokeDasharray = l; hunder.style.strokeDashoffset = l*(1-q); }
   qh.style.clipPath = `inset(-25% ${(1-eio(lin(t,CUE.under[0],CUE.under[1]+0.3)))*100}% -25% -5%)`;
 
-  /* ── the attract screen ────────────────────────────────────────────────
-     Everything here is still a pure function of t: the scroll is a phase, the
-     slam is an eased scale, the chrome "runs" by sliding its own gradient. */
-  const NEON_IN = 4.30;
-  /* 1 · the floor scrolls at you: rows march forward on a perspective curve */
-  const ph = (t - 3.10) * 0.95;   /* the floor comes at you harder now */
-  hzLines.forEach((l,i)=>{
-    const u = (((i + ph) % NHZ) + NHZ) % NHZ / NHZ;
-    const y = 429 * Math.pow(u, 2.4);
-    l.setAttribute("y1", y); l.setAttribute("y2", y);
-    l.setAttribute("opacity", (0.9 * Math.min(1, u * 5)).toFixed(3));
-  });
-  /* 2 · the logo slams in, with a frame of white on the hit */
-  const slam = eoq(lin(t, NEON_IN - 0.28, NEON_IN + 0.34));
-  const gs = 1 + 0.34 * (1 - slam);
-  lockEl.style.transform = t < NEON_IN + 0.4 ? `scale(${gs.toFixed(4)})` : "";
-  flash.style.opacity = (0.30 * Math.pow(1 - clamp01(lin(t, NEON_IN, NEON_IN + 0.20)), 3)).toFixed(3);
-  /* 3 · the chrome runs. The stops stay exactly where they were designed:
-     sliding their offsets wraps them out of order, and SVG clamps a stop to be
-     >= the one before it, which collapses the gradient to two colours and makes
-     the logotype change identity. Move the gradient, not its stops. */
-  const glide = 0.085 * Math.sin((t - NEON_IN) * 2.1);
-  chromeGrad.setAttribute("gradientTransform", `translate(0 ${glide.toFixed(4)})`);
-  /* 4 · scanlines roll, the way a CRT rolls when it is not quite locked */
+  /* the attract screen: the floor scrolls, the chrome runs, the scanlines roll */
+  const ph = (t - 2.95) * 0.95;
+  hzLines.forEach((l,i)=>{ const u = (((i + ph) % NHZ) + NHZ) % NHZ / NHZ, y = 429 * Math.pow(u, 2.4);
+    l.setAttribute("y1", y); l.setAttribute("y2", y); l.setAttribute("opacity", (0.9 * Math.min(1, u * 5)).toFixed(3)); });
+  flash.style.opacity = (0.30 * Math.pow(1 - clamp01(lin(t, 4.00, 4.20)), 3)).toFixed(3);
+  chromeGrad.setAttribute("gradientTransform", `translate(0 ${(0.085 * Math.sin((t - 4.0) * 2.1)).toFixed(4)})`);
   $("scan").style.backgroundPosition = `0 ${((t*46)%4).toFixed(2)}px`;
 
-  scene.style.opacity = 1 - eio(lin(t, CUE.fade[0], CUE.fade[1]));
-};
+  /* the press: the dots swell in a wave that travels across the sheet — a press
+     running, not a tile scrolling — and the wave breathes with the plates' drift */
+  { const dr = 1 + 0.30 * Math.sin(t * 2.3) + 0.10 * Math.sin(t * 5.1);
+    const visRows = DOT.rows * cur.dotsIn;
+    for (let r = 0; r < DOT.rows; r++) {
+      const on = r >= DOT.rows - visRows, base = 4.4 * Math.pow((r + 1) / DOT.rows, 0.9);
+      for (let c = 0; c < DOT.cols; c++) {
+        const e = DOT.els[r * DOT.cols + c];
+        if (!on || cur.dots < 0.01) { e.setAttribute("r", 0); continue; }
+        e.setAttribute("r", (base * (0.70 + 0.30 * Math.sin(c * DOT.pitch * 0.017 - t * 7.2 + r * 0.42) * dr)).toFixed(2));
+      }
+    } }
+  scene.style.opacity = 1 - eio(lin(t, 9.00, 9.35));
+}
 
+/* the contract with the renderer: seconds via window.seek, 0..1 via renderFrame,
+   and the URL hash for the no-node fallback path */
+window.seek = function(t){
+  tl.seek(Math.max(0, Math.min(DUR, t)), true);
+  gsap.set(lockEl, { y: cur.lockY });
+  apply(cur);
+  post(t);
+};
 window.renderFrame = u => window.seek(u * DUR);
 function hashSeek(){ const h=parseFloat((location.hash||"").slice(1)); if(!Number.isNaN(h)) window.seek(h*DUR); }
 addEventListener("hashchange", hashSeek);

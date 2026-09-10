@@ -31,9 +31,12 @@ timeline, screenshots every frame, synthesizes the sound, and encodes an MP4.
 
 1. **Every frame is a pure function of time.** All animation lives in one
    function of `t`. Never `Date.now()`, `Math.random()`, `requestAnimationFrame`,
-   CSS `animation` or `transition`, or a video/gif asset. Called twice with the
+   CSS `animation` or `transition`, a wall-clock animation library (Framer
+   Motion, anime.js, a ticker), or a video/gif asset. Called twice with the
    same `t`, it must paint the identical frame. This is what makes renders
-   deterministic and re-runs comparable.
+   deterministic and re-runs comparable. **GSAP is the one library allowed**,
+   and only as a *paused* timeline driven by `seek` — see *Sequencing with
+   GSAP* below.
 2. **The video must end on the full brand, fully visible, held.** Feeds freeze on
    the last frame — that frozen frame is a free billboard, and a video that ends
    mid-fade wastes it. `render-video.sh` holds the last frame for `END_HOLD`
@@ -62,6 +65,47 @@ addEventListener("DOMContentLoaded", () => renderFrame(parseFloat(location.hash.
 persistent page. The fallback path launches Chrome per frame at `file://…#t`.
 Same frames either way — but **support both** or the fallback silently renders
 frame 0 three hundred times.
+
+## Sequencing with GSAP
+
+For anything with more than a handful of overlapping moves — a logo film, a
+multi-scene piece — write the timeline in **GSAP** rather than by hand. It is
+vendored at `posts/vendor/gsap.min.js`; load it with a relative `<script src>`
+and never from a CDN, because the render must not touch the network.
+
+It is allowed because a **paused** timeline is seekable and pure: `tl.seek(t)`
+renders the exact state at *t* with no clock involved, so rule 1 still holds.
+The shape every GSAP video here uses:
+
+```js
+const cur = { bg:"rgb(244,239,228)", morph:0, y:0 };        // the state
+const tl  = gsap.timeline({ paused:true, defaults:{ overwrite:false } });
+tl.to(cur,    { bg:"rgb(7,10,28)", morph:1, duration:0.9, ease:"power2.inOut" }, 2.95)
+  .to(lockup, { rotationY:92, duration:0.24, ease:"power2.in" }, 3.30)
+  .set(cur,   { face:"neon" }, 3.54)
+  .to(lockup, { rotationY:0,  duration:0.34, ease:"back.out(1.7)" }, 3.54);
+
+window.seek = t => { tl.seek(t, true); apply(cur); post(t); };
+window.renderFrame = u => window.seek(u * DUR);
+```
+
+- Tween **numbers and colour strings on a plain object** (`cur`) for anything
+  that ends up in a CSS custom property, and let `apply()` write the DOM.
+  Tween **transforms, clip-paths and attributes on elements directly**; GSAP
+  renders those itself on seek.
+- **`tl.seek(t, true)` suppresses callbacks.** An `onUpdate` never fires under
+  seek, so never put rendering inside a tween — apply the state after the seek.
+- **Never write `style.transform` on an element GSAP is transforming.** It
+  stamps over GSAP's value every frame and the tween silently does nothing.
+  Route every transform on such an element through `gsap.set`.
+- **Heavy reveals stay out of the tween engine.** Thousands of SVG nodes appear
+  progressively by tweening one 0..1 number and revealing the first fraction of
+  a list after the seek — not by giving each node its own tween.
+- Eases with overshoot (`back.out`, `expo.out`) are for *arrivals* in brand
+  films — a plate landing, a card turning back. Product scenes keep rule 4.
+
+The worked example is `examples/logo-metamorphosis/metamorphosis.html`: three
+worlds, every join built rather than blurred, on one GSAP timeline.
 
 ## Steps
 
@@ -229,6 +273,11 @@ in dimensions.** The concat is a stream copy, not a re-encode, so mixing a
   cut off mid-decay.
 - **Something looks wrong at exactly one timestamp and fine either side** — it is
   an expression evaluating outside its intended window. Clamp it explicitly.
+- **A GSAP tween that visibly does nothing** — something else is writing
+  `style.transform` (or the same property) on that element every frame. Find the
+  direct write and route it through `gsap.set`.
+- **Rendering from inside a GSAP `onUpdate`** — it never fires under
+  `seek(t, true)`. Apply state after the seek, from `window.seek` itself.
 
 ---
 

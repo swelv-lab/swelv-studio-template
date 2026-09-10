@@ -1,49 +1,257 @@
 {
-  "_comment": "Sound for the 8.5s story. Two worlds, each with its own voice. There is no narration over this, so the cues carry the whole thing — but they still mark events rather than perform. Times are absolute seconds on the same clock as window.seek(t) in metamorphosis.html; change one, change both.",
+  "_comment": "Sound for the 9.4s story. Three worlds, each with its own voice: a pen, an arcade, a press. Times are absolute seconds on the same clock as window.seek(t) in metamorphosis.html; change one, change both.",
   "seed": 20260909,
   "cues": [
-    { "_": "── 1 · a pen on paper. A nib scratch is a short band of noise, so the word is written with one whoosh per pen stroke rather than one per letter. Twelve strokes: s, w, e, l.",
-      "type": "whoosh", "time": 0.00, "dur": 1.40, "gain": 0.055 },
-
-    { "type": "whoosh", "time": 0.38, "dur": 0.13, "gain": 0.115 },
-    { "type": "whoosh", "time": 0.53, "dur": 0.11, "gain": 0.110 },
-    { "type": "whoosh", "time": 0.66, "dur": 0.10, "gain": 0.105 },
-
-    { "type": "whoosh", "time": 0.84, "dur": 0.12, "gain": 0.115 },
-    { "type": "whoosh", "time": 0.97, "dur": 0.10, "gain": 0.105 },
-    { "type": "whoosh", "time": 1.10, "dur": 0.11, "gain": 0.110 },
-    { "type": "whoosh", "time": 1.22, "dur": 0.09, "gain": 0.100 },
-
-    { "type": "whoosh", "time": 1.40, "dur": 0.12, "gain": 0.115 },
-    { "type": "whoosh", "time": 1.52, "dur": 0.10, "gain": 0.105 },
-    { "type": "whoosh", "time": 1.64, "dur": 0.11, "gain": 0.110 },
-
-    { "type": "whoosh", "time": 1.84, "dur": 0.16, "gain": 0.120 },
-    { "type": "whoosh", "time": 1.96, "dur": 0.09, "gain": 0.100 },
-
-    { "_": "the V, drawn in one stroke, then its swell, then the nib lifts",
-      "type": "whoosh", "time": 2.15, "dur": 0.28, "gain": 0.110 },
-    { "type": "whoosh", "time": 2.34, "dur": 0.24, "gain": 0.100 },
-    { "type": "tone",   "time": 2.46, "freq": 587.33, "dur": 0.22, "gain": 0.045 },
-    { "type": "whoosh", "time": 2.55, "dur": 0.32, "gain": 0.090 },
-
-    { "_": "── 2 · 1984. The tube charges, then a gated stab on the ignition, a D-A-D arpeggio over it, and a detuned pad humming underneath like a neon transformer.",
-      "type": "whoosh", "time": 3.10, "dur": 1.30, "gain": 0.060 },
-
-    { "type": "drop",  "time": 4.30, "f0": 220, "f1": 73.42, "dur": 0.26, "gain": 0.130 },
-    { "type": "drop",  "time": 4.36, "f0": 330, "f1": 146.83, "dur": 0.18, "gain": 0.085 },
-
-    { "type": "bell",  "time": 4.40, "freq": 146.83, "dur": 0.50, "gain": 0.048 },
-    { "type": "bell",  "time": 4.50, "freq": 220.00, "dur": 0.50, "gain": 0.044 },
-    { "type": "bell",  "time": 4.60, "freq": 293.66, "dur": 0.50, "gain": 0.040 },
-    { "type": "bell",  "time": 4.70, "freq": 440.00, "dur": 0.50, "gain": 0.036 },
-    { "type": "bell",  "time": 4.80, "freq": 587.33, "dur": 0.50, "gain": 0.032 },
-
-    { "type": "synth", "time": 4.45, "freq": 73.42,  "dur": 1.90, "gain": 0.040, "attack": 0.30, "release": 0.90 },
-    { "type": "pad",   "time": 4.60, "freq": 146.83, "dur": 1.50, "gain": 0.026, "attack": 0.28, "release": 0.80 },
-
-    { "_": "── 3 · it cools. Everything drains out. No resolve here: the ender does that, and the last half-second before the handoff is silent.",
-      "type": "whoosh", "time": 6.62, "dur": 1.10, "gain": 0.040 },
-    { "type": "drop",  "time": 7.42, "f0": 260, "f1": 110, "dur": 0.30, "gain": 0.060 }
+    {
+      "_": "── 1 · a pen on paper. One whoosh per pen stroke: s, w, e, l — then the V, its swell, the nib lifting, the underline.",
+      "type": "whoosh",
+      "time": 0.0,
+      "dur": 1.4,
+      "gain": 0.055
+    },
+    {
+      "type": "whoosh",
+      "time": 0.38,
+      "dur": 0.13,
+      "gain": 0.115
+    },
+    {
+      "type": "whoosh",
+      "time": 0.53,
+      "dur": 0.11,
+      "gain": 0.11
+    },
+    {
+      "type": "whoosh",
+      "time": 0.66,
+      "dur": 0.1,
+      "gain": 0.105
+    },
+    {
+      "type": "whoosh",
+      "time": 0.84,
+      "dur": 0.12,
+      "gain": 0.115
+    },
+    {
+      "type": "whoosh",
+      "time": 0.97,
+      "dur": 0.1,
+      "gain": 0.105
+    },
+    {
+      "type": "whoosh",
+      "time": 1.1,
+      "dur": 0.11,
+      "gain": 0.11
+    },
+    {
+      "type": "whoosh",
+      "time": 1.22,
+      "dur": 0.09,
+      "gain": 0.1
+    },
+    {
+      "type": "whoosh",
+      "time": 1.4,
+      "dur": 0.12,
+      "gain": 0.115
+    },
+    {
+      "type": "whoosh",
+      "time": 1.52,
+      "dur": 0.1,
+      "gain": 0.105
+    },
+    {
+      "type": "whoosh",
+      "time": 1.64,
+      "dur": 0.11,
+      "gain": 0.11
+    },
+    {
+      "type": "whoosh",
+      "time": 1.84,
+      "dur": 0.16,
+      "gain": 0.12
+    },
+    {
+      "type": "whoosh",
+      "time": 1.96,
+      "dur": 0.09,
+      "gain": 0.1
+    },
+    {
+      "type": "whoosh",
+      "time": 2.15,
+      "dur": 0.28,
+      "gain": 0.1
+    },
+    {
+      "type": "whoosh",
+      "time": 2.34,
+      "dur": 0.24,
+      "gain": 0.09
+    },
+    {
+      "type": "tone",
+      "time": 2.46,
+      "freq": 587.33,
+      "dur": 0.22,
+      "gain": 0.03
+    },
+    {
+      "type": "whoosh",
+      "time": 2.55,
+      "dur": 0.32,
+      "gain": 0.085
+    },
+    {
+      "_": "── 2 · the sunset rises over the paper (the tube charging), the card turns, the stab lands on the slam at 4.00 and the arpeggio climbs out of it",
+      "type": "whoosh",
+      "time": 2.95,
+      "dur": 1.3,
+      "gain": 0.055
+    },
+    {
+      "type": "drop",
+      "time": 4.0,
+      "f0": 240,
+      "f1": 73.42,
+      "dur": 0.3,
+      "gain": 0.095
+    },
+    {
+      "type": "drop",
+      "time": 4.06,
+      "f0": 146.83,
+      "f1": 146.83,
+      "dur": 0.22,
+      "gain": 0.06
+    },
+    {
+      "type": "bell",
+      "time": 4.1,
+      "freq": 146.83,
+      "dur": 0.5,
+      "gain": 0.042
+    },
+    {
+      "type": "bell",
+      "time": 4.2,
+      "freq": 220.0,
+      "dur": 0.5,
+      "gain": 0.038
+    },
+    {
+      "type": "bell",
+      "time": 4.3,
+      "freq": 293.66,
+      "dur": 0.5,
+      "gain": 0.034
+    },
+    {
+      "type": "bell",
+      "time": 4.4,
+      "freq": 440.0,
+      "dur": 0.5,
+      "gain": 0.03
+    },
+    {
+      "type": "bell",
+      "time": 4.5,
+      "freq": 587.33,
+      "dur": 0.5,
+      "gain": 0.026
+    },
+    {
+      "type": "pad",
+      "time": 4.15,
+      "dur": 1.9,
+      "gain": 0.032
+    },
+    {
+      "_": "── 3 · the machine is switched off: the tube collapses to a line, the line to a dot. Then the drum, running.",
+      "type": "whoosh",
+      "time": 5.85,
+      "dur": 0.28,
+      "gain": 0.14
+    },
+    {
+      "type": "drop",
+      "time": 6.06,
+      "f0": 880,
+      "f1": 440,
+      "dur": 0.14,
+      "gain": 0.06
+    },
+    {
+      "type": "tone",
+      "time": 6.2,
+      "freq": 1174.66,
+      "dur": 0.12,
+      "gain": 0.03
+    },
+    {
+      "type": "whoosh",
+      "time": 6.25,
+      "dur": 2.4,
+      "gain": 0.048
+    },
+    {
+      "_": "── 4 · the press runs. One thock per plate, a beat apart — that gap is the registration error, heard. The sheet settles, the next sheet goes through.",
+      "type": "drop",
+      "time": 6.86,
+      "f0": 190,
+      "f1": 95,
+      "dur": 0.12,
+      "gain": 0.105
+    },
+    {
+      "type": "drop",
+      "time": 7.0,
+      "f0": 190,
+      "f1": 95,
+      "dur": 0.12,
+      "gain": 0.115
+    },
+    {
+      "type": "tone",
+      "time": 7.08,
+      "freq": 587.33,
+      "dur": 0.24,
+      "gain": 0.04
+    },
+    {
+      "type": "drop",
+      "time": 7.74,
+      "f0": 190,
+      "f1": 95,
+      "dur": 0.12,
+      "gain": 0.062
+    },
+    {
+      "type": "drop",
+      "time": 7.88,
+      "f0": 190,
+      "f1": 95,
+      "dur": 0.12,
+      "gain": 0.068
+    },
+    {
+      "_": "── 5 · the sheet pulled off the press, and the ground draining to navy. Silent from ~9.1: the ender's own strike is what lands next.",
+      "type": "whoosh",
+      "time": 8.3,
+      "dur": 0.45,
+      "gain": 0.085
+    },
+    {
+      "type": "drop",
+      "time": 8.9,
+      "f0": 110,
+      "f1": 55,
+      "dur": 0.3,
+      "gain": 0.045
+    }
   ]
 }

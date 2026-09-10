@@ -18,7 +18,7 @@ with the rules open beside them.
 | ------- | -------------------- |
 | [`brand-is-a-file/`](brand-is-a-file/) | A 3-slide carousel with its caption. Three slides, one argument, and a 76-word caption that does not narrate them. |
 | [`explainer/`](explainer/) | An 80-second narrated film. The pattern: time the picture to the voice, never the other way round. |
-| [`logo-metamorphosis/`](logo-metamorphosis/) | A 15-second logo film, and a logo system behind it. The pattern: interpolate state, not pictures. |
+| [`logo-metamorphosis/`](logo-metamorphosis/) | A 16-second logo film, and a logo system behind it. The patterns: interpolate state, not pictures; sequence with a paused GSAP timeline; build every join, never blur it. |
 
 More land as they are built: a deck, an essay.
 
@@ -36,7 +36,14 @@ should be built:
   as matched cubics, so one shape *becomes* another by lerping coordinates.
 - **`CSS transition` is not used and cannot be.** It is wall-clock driven, so it
   would break the one rule every video here obeys — that a frame is a pure
-  function of `t`.
+  function of `t`. The same goes for Framer Motion and every other clock-driven
+  library. **GSAP is the exception**, used only as a *paused* timeline that
+  `seek(t)` drives — which is still a pure function of `t`, and is what sequences
+  the film's thirty overlapping moves.
+- **The joins are built, not blurred.** The sunset rises over the paper and the
+  lockup turns over like a card; the screen switches off like a CRT and the press
+  drops its two plates one after the other. A cross-fade between finished worlds
+  is a slideshow, and it looks like one.
 - **Two clips, stream-copied together.** The ender is reusable, so it is
   rendered once and joined without re-encoding. Both clips therefore have to
   match in size.
