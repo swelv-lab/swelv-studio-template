@@ -12,7 +12,7 @@ rather than a re-time.
 Needs edge-tts (pip install edge-tts) and ffmpeg. Network required: the voices
 are Microsoft's neural TTS. Nothing else in this studio needs the network.
 """
-import json, os, subprocess, sys
+import json, os, shutil, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 VO = os.path.join(HERE, "vo")
@@ -27,12 +27,15 @@ def dur(path):
     return float(out.stdout.strip())
 
 
+# edge-tts on PATH, or through uv if that is how it was installed
+TTS = ["edge-tts"] if shutil.which("edge-tts") else ["uvx", "edge-tts"]
+
 timing, t = {}, spec.get("lead", 0.5)
 for ln in spec["lines"]:
     mp3 = os.path.join(VO, ln["id"] + ".mp3")
     wav = os.path.join(VO, ln["id"] + ".wav")
     if not os.path.exists(wav) or os.environ.get("FORCE"):
-        subprocess.run(["edge-tts", "--voice", spec["voice"], "--rate", spec["rate"],
+        subprocess.run([*TTS, "--voice", spec["voice"], "--rate", spec["rate"],
                         "--text", ln["text"], "--write-media", mp3],
                        check=True, capture_output=True)
         subprocess.run(["ffmpeg", "-y", "-i", mp3, "-ar", "48000", "-ac", "1", wav],

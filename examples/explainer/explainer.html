@@ -1,165 +1,382 @@
 <!doctype html>
+<!-- ---------------------------------------------------------------------------
+  the explainer · 1920x1080 @ 30fps · ~88s of story, then the 6.5s ender
+
+  A narrated explainer for the studio, made with the studio — and cut like the
+  logo film. Five acts, and each one is set in a different way images have been
+  made:
+
+    hand    ink on paper — the brief, the interview, the one file
+    neon    a CRT — the prompt, the slides, the re-render
+    press   a duplicator — decks and long-form, printed in two plates
+    cel     a painted cel — video, the part that explains this file
+    brand   the brand kit's own navy — the calendar, the model, the close
+
+  The joins are the film's, and they are PHYSICAL: the sunset rises over the
+  paper and the page turns over; the screen is switched off and collapses to a
+  line; the press drops its plates; the sheet is pulled and the painted sky
+  arrives one band at a time; the cel is cut and the navy is what is left.
+  Nothing cross-fades.
+
+  The content furniture (cards, bars, pills, the terminal) is the same set of
+  classes in every act. What changes is the TOKENS: each world re-declares the
+  brand kit's --fg / --panel / --line / --accent / --sans on the stage, so one
+  card is a paper card, then a glowing panel, then a two-plate print, then a
+  flat black cel, with no second set of markup.
+
+  Sequencing is GSAP on a PAUSED timeline (timeline.js). tl.seek(t) is a lookup,
+  not a playback, so every frame is still a pure function of t and the
+  renderer can screenshot it. Layout only lives in this file; the tokens come
+  from ../../brand-kit/brand.css.
+---------------------------------------------------------------------------- -->
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>swelv studio · explainer</title>
     <link rel="stylesheet" href="../../brand-kit/brand.css" />
     <style>
-      /* ---------------------------------------------------------------------
-         LAYOUT + MOTION ONLY. Every colour and typeface comes from the brand
-         kit, same as every other surface in this repo.
+      /* the worlds' faces. Video capture needs every font on disk. */
+      @font-face { font-family:"Caveat";          src:url("fonts/caveat-500.woff2") format("woff2");        font-weight:500; font-display:block }
+      @font-face { font-family:"Caveat";          src:url("fonts/caveat-700.woff2") format("woff2");        font-weight:700; font-display:block }
+      @font-face { font-family:"Share Tech Mono"; src:url("fonts/sharetechmono-400.woff2") format("woff2"); font-weight:400; font-display:block }
+      @font-face { font-family:"Audiowide";       src:url("fonts/audiowide-400.woff2") format("woff2");     font-weight:400; font-display:block }
+      @font-face { font-family:"Satoshi";         src:url("fonts/Satoshi-Medium.otf") format("opentype");   font-weight:500; font-display:block }
+      @font-face { font-family:"Satoshi";         src:url("fonts/Satoshi-Bold.otf") format("opentype");     font-weight:700; font-display:block }
+      @font-face { font-family:"Satoshi";         src:url("fonts/Satoshi-Black.otf") format("opentype");    font-weight:900; font-display:block }
+      @font-face { font-family:"Noto Serif JP";   src:url("fonts/notoserifjp-900-latin.woff2") format("woff2"); font-weight:900; font-display:block;
+                   unicode-range:U+0000-00FF }
+      @font-face { font-family:"Noto Serif JP";   src:url("fonts/notoserifjp-900-kana.woff2") format("woff2");  font-weight:900; font-display:block;
+                   unicode-range:U+3000-30FF }
 
-         The whole file is one pure function of time: renderFrame(t) paints the
-         frame at t and nothing else. No clocks, no randomness, no CSS
-         animation, so frame 900 is identical on every render.
-      --------------------------------------------------------------------- */
       .canvas { --w: 1920px; --h: 1080px; }
-      .stage { padding: 0; overflow: hidden; }
-
-      /* -- persistent chrome ------------------------------------------------ */
-      #hdr {
-        position: absolute; left: 64px; right: 64px; top: 52px;
-        display: flex; align-items: center; justify-content: space-between;
+      .stage {
+        padding: 0; overflow: hidden;
+        /* the ground's state — every one of these is rewritten each frame by apply() */
+        --gbg:#f4efe4; --ink:#1b2430; --vink:#e2500a;
+        --lw:7.5; --vw:12.5; --sw:7.5; --swo:0.5;
+        --grain:0.22; --sky:0; --grid:0; --scan:0; --bloom:0;
+        --wordop:0; --handop:1; --face:"Audiowide"; --fw:400; --fs:72px;
+        --dots:0; --mtn:0;
       }
-      #hdr .logo-lockup { font-size: 36px; }
+
+      /* =====================================================================
+         THE WORLD TOKENS. Same furniture, five skins. Every class below reads
+         these, so switching data-world on the stage re-dresses the whole act.
+         "brand" declares nothing: it is the brand kit as shipped.
+         ===================================================================== */
+      .stage[data-world="hand"] {
+        --fg:#1b2430; --muted:#5b6373; --faint:#8f8a7e; --accent:#e2500a; --accent-ink:#fff;
+        --panel:rgba(255,253,247,.86); --panel-2:rgba(27,36,48,.07);
+        --line:rgba(27,36,48,.46); --line-soft:rgba(27,36,48,.16);
+        --accent-soft:rgba(226,80,10,.13); --accent-line:rgba(226,80,10,.6);
+        --sans:"Caveat",cursive; --mono:"Caveat",cursive; --radius:6px;
+      }
+      .stage[data-world="neon"] {
+        --fg:#ffe3b6; --muted:#e0b98a; --faint:#b08a5c; --accent:#ff9a3c; --accent-ink:#0b0d22;
+        --panel:rgba(7,10,28,.80); --panel-2:rgba(255,120,30,.12);
+        --line:#ff7a1e; --line-soft:rgba(255,122,30,.35);
+        --accent-soft:rgba(255,154,60,.14); --accent-line:#ffb45a;
+        --sans:"Audiowide",sans-serif; --mono:"Share Tech Mono",monospace; --radius:4px;
+      }
+      .stage[data-world="press"] {
+        --fg:#e8480a; --muted:#2b3a8f; --faint:#8a7e6e; --accent:#e8480a; --accent-ink:#f2ece0;
+        --panel:#f2ece0; --panel-2:rgba(43,58,143,.08);
+        --line:#2b3a8f; --line-soft:rgba(43,58,143,.28);
+        --accent-soft:rgba(232,72,10,.12); --accent-line:#e8480a;
+        --sans:"Satoshi",sans-serif; --mono:"Share Tech Mono",monospace; --radius:2px;
+      }
+      .stage[data-world="cel"] {
+        --fg:#f6ead6; --muted:#d8c4a6; --faint:#a89d8a; --accent:#f2662a; --accent-ink:#f6ead6;
+        --panel:#080a12; --panel-2:#151a2e;
+        --line:#f6ead6; --line-soft:rgba(246,234,214,.3);
+        --accent-soft:rgba(242,102,42,.18); --accent-line:#f2662a;
+        --sans:"Noto Serif JP","Noto Serif CJK JP",serif; --mono:"Share Tech Mono",monospace; --radius:0px;
+      }
+
+      /* =====================================================================
+         THE GROUNDS — the film's layers, built once, driven by numbers
+         ===================================================================== */
+      .layer  { position:absolute; inset:0; pointer-events:none }
+      #ground { position:absolute; inset:0 }
+      #bg     { background:var(--gbg) }
+      #grain  { opacity:var(--grain); mix-blend-mode:multiply }
+      #grain svg { position:absolute; inset:0; width:100%; height:100% }
+      #vig    { opacity:var(--grain); background:radial-gradient(120% 90% at 50% 40%, rgba(255,255,255,0) 40%, rgba(120,95,60,0.5) 100%) }
+      #sky    { opacity:var(--sky); background:linear-gradient(180deg,#070a1c 0%,#14183a 30%,#4a2140 58%,#a03a18 84%,#ff6a12 100%); height:648px; bottom:auto }
+      #sun    { position:absolute; left:50%; top:150px; width:540px; height:540px; margin-left:-270px; border-radius:50%; overflow:hidden;
+                opacity:var(--sky); background:linear-gradient(180deg,#ffd76a 0%,#ff8a1e 46%,#ff3d5a 100%) }
+      #sun i  { position:absolute; left:0; width:100%; background:#0b0d22 }
+      #hz     { position:absolute; left:0; top:648px; width:100%; height:3px; opacity:var(--grid);
+                background:#ff9a3c; box-shadow:0 0 26px 6px rgba(255,110,20,.75) }
+      #floor  { position:absolute; left:0; top:651px; right:0; bottom:0; overflow:hidden; opacity:var(--grid); background:#0a0c20 }
+      #floor svg { position:absolute; inset:0; width:100%; height:100% }
+      #dots   { top:auto; height:220px; opacity:var(--dots); mix-blend-mode:multiply }
+      #dots svg { position:absolute; inset:0; width:100%; height:100% }
+      #yotei  { opacity:var(--mtn) }
+      #scan   { opacity:var(--scan); background:repeating-linear-gradient(180deg, rgba(0,0,0,.34) 0 1px, rgba(0,0,0,0) 1px 4px) }
+      #bloom  { position:absolute; left:50%; top:520px; width:1400px; height:640px; margin:-320px 0 0 -700px; border-radius:50%;
+                opacity:var(--bloom); background:radial-gradient(closest-side, rgba(255,120,30,.22), rgba(255,61,90,.07) 55%, rgba(0,0,0,0) 78%) }
+      #flash  { background:#fff; opacity:0; mix-blend-mode:screen }
+      #celFlash { background:#f6ead6; opacity:0 }
+      #celRing { position:absolute; width:300px; height:300px; border-radius:50%; pointer-events:none;
+                 border:10px solid #f3c67e; opacity:0; left:810px; top:320px }
+      #crt    { position:absolute; left:0; right:0; top:50%; height:4px; margin-top:-2px; background:#fff;
+                opacity:0; box-shadow:0 0 18px 6px rgba(255,220,180,.9) }
+
+      /* =====================================================================
+         THE HEADER — the studio lockup, wearing each world in turn
+         ===================================================================== */
+      #hdr { position:absolute; left:64px; right:64px; top:36px; height:84px }
+      #brandlock { position:absolute; left:0; top:0; height:84px; width:560px }
+      #lockup { position:absolute; left:0; top:0; width:236px }
+      #lockup svg { display:block; overflow:visible; width:236px }
+      #gHand { opacity:var(--handop) }
+      #word  { fill:var(--ink); opacity:var(--wordop); font-family:var(--face); font-weight:var(--fw); font-size:var(--fs) }
+      #vmk   { fill:none; stroke-linecap:round; stroke-linejoin:round }
+      #vcrest{ stroke:var(--vink); stroke-width:var(--vw) }
+      #vswell{ stroke:var(--vink); stroke-width:var(--sw); opacity:var(--swo) }
+      /* "studio", in the world's own hand */
+      #qual  { position:absolute; left:252px; top:0; height:84px; display:flex; align-items:flex-end; padding-bottom:9px; white-space:nowrap }
+      #qual span { display:none }
+      .stage[data-world="hand"]  #qual .q-hand  { display:block; font:500 38px "Caveat",cursive; color:#5b6373; transform:rotate(1.2deg) translateY(4px) }
+      .stage[data-world="neon"]  #qual .q-neon  { display:block; font:400 21px "Share Tech Mono",monospace; letter-spacing:.5em; text-transform:uppercase;
+                                                   color:#ffe3b6; text-shadow:0 0 14px rgba(255,140,40,.95), 0 0 36px rgba(255,90,10,.6) }
+      .stage[data-world="press"] #qual .q-press { display:block; font:400 21px "Share Tech Mono",monospace; letter-spacing:.34em; text-transform:uppercase;
+                                                   color:#2b3a8f; mix-blend-mode:multiply }
+      .stage[data-world="cel"]   #qual .q-cel   { display:block; font:900 24px "Noto Serif JP","Noto Serif CJK JP",serif; letter-spacing:.24em; color:#d8c4a6 }
+      /* the brand kit's own lockup, for the last act: the film's "off" state */
+      #kitlock { position:absolute; left:2px; bottom:12px; font-size:36px; opacity:0 }
+      #kitqual { position:absolute; left:132px; bottom:14px; font-family:var(--mono); font-size:15px; letter-spacing:.5em;
+                 text-transform:uppercase; color:var(--accent); opacity:0 }
       #chapter {
-        font-family: var(--mono); font-size: 18px; letter-spacing: 0.2em;
-        text-transform: uppercase; color: var(--faint);
+        position:absolute; right:0; top:28px;
+        font-family:var(--mono); font-size:18px; letter-spacing:0.2em; text-transform:uppercase; color:var(--faint);
       }
-      #prog {
-        position: absolute; left: 64px; right: 64px; bottom: 52px; height: 2px;
-        background: var(--line-soft);
-      }
-      #prog i { display: block; height: 100%; width: 0; background: var(--accent); }
+      .stage[data-world="hand"] #chapter { font-size:32px; letter-spacing:0; text-transform:none; top:22px; transform:rotate(-1deg) }
+      .stage[data-world="neon"] #chapter { text-shadow:0 0 12px rgba(255,140,40,.8) }
+      .stage[data-world="cel"]  #chapter { font-family:var(--sans); font-weight:900; font-size:22px; letter-spacing:.1em; text-transform:none }
 
-      /* -- subtitles (the video has to work muted) -------------------------- */
+      #prog { position:absolute; left:64px; right:64px; bottom:52px; height:2px; background:var(--line-soft) }
+      #prog i { display:block; height:100%; width:0; background:var(--accent) }
+
+      /* subtitles — the video has to work muted */
       #sub {
-        position: absolute; left: 50%; transform: translateX(-50%);
-        bottom: 96px; width: 1440px; text-align: center;
-        font-family: var(--sans); font-weight: 500; font-size: 35px;
-        line-height: 1.4; color: var(--fg); opacity: 0;
+        position:absolute; left:50%; transform:translateX(-50%); bottom:96px; width:1440px; text-align:center;
+        font-family:var(--sans); font-weight:500; font-size:35px; line-height:1.4; color:var(--fg); opacity:0;
       }
+      .stage[data-world="hand"]  #sub { font-size:44px; font-weight:500 }
+      .stage[data-world="neon"]  #sub { font-family:"Share Tech Mono",monospace; font-size:33px; text-shadow:0 0 14px rgba(255,140,40,.9), 0 0 36px rgba(255,90,10,.5) }
+      .stage[data-world="press"] #sub { font-weight:700 }
+      .stage[data-world="cel"]   #sub { font-weight:900; font-size:33px }
 
-      /* -- scenes ----------------------------------------------------------- */
+      /* =====================================================================
+         SCENES + the shared furniture
+         ===================================================================== */
+      #scenes { position:absolute; inset:0 }
       .scene {
-        position: absolute; inset: 148px 88px 196px; opacity: 0;
-        display: flex; flex-direction: column; align-items: center;
-        justify-content: center;
+        position:absolute; inset:148px 88px 196px; visibility:hidden;
+        display:flex; flex-direction:column; align-items:center; justify-content:center;
       }
+      .stage[data-world="cel"] .scene { inset:128px 88px 336px }
 
-      /* generic furniture ---------------------------------------------------- */
-      .card {
-        background: var(--panel); border: 1px solid var(--line);
-        border-radius: var(--radius);
-      }
-      .mono { font-family: var(--mono); }
-      .big {
-        font-family: var(--sans); font-weight: 900; font-size: 112px;
-        line-height: 1.05; letter-spacing: -0.04em; color: var(--fg);
-        text-align: center;
-      }
-      .big .o { color: var(--accent); }
-      .lede {
-        margin-top: 26px; font-family: var(--sans); font-weight: 500;
-        font-size: 31px; color: var(--muted); text-align: center;
-      }
+      .card { background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); position:relative }
+      .mono { font-family:var(--mono) }
+      .big  { font-family:var(--sans); font-weight:900; font-size:112px; line-height:1.05; letter-spacing:-0.04em; color:var(--fg); text-align:center }
+      .big .o { color:var(--accent) }
+      .big span.l { display:block }
+      .lede { margin-top:26px; font-family:var(--sans); font-weight:500; font-size:31px; color:var(--muted); text-align:center }
 
-      /* terminal ------------------------------------------------------------ */
-      .term {
-        width: 1320px; background: var(--panel); border: 1px solid var(--line);
-        border-radius: 14px; overflow: hidden;
-      }
-      .term .bar {
-        height: 46px; background: var(--panel-2);
-        border-bottom: 1px solid var(--line-soft);
-        display: flex; align-items: center; gap: 9px; padding: 0 18px;
-      }
-      .term .bar i {
-        width: 11px; height: 11px; border-radius: 50%; background: var(--line);
-        display: block;
-      }
-      .term .bar span {
-        margin-left: 12px; font-family: var(--mono); font-size: 14px;
-        color: var(--faint); letter-spacing: 0.06em;
-      }
-      .term .body { padding: 34px 38px; min-height: 240px; }
-      .ln {
-        font-family: var(--mono); font-size: 27px; line-height: 1.85;
-        color: var(--muted); white-space: pre-wrap;
-      }
-      .ln .p { color: var(--accent); }
-      .ln.you { color: var(--fg); }
-      .ln.ai { color: var(--muted); }
-      .cursor { color: var(--accent); }
+      .term { width:1320px; background:var(--panel); border:1px solid var(--line); border-radius:14px; overflow:hidden; position:relative }
+      .term .bar { height:46px; background:var(--panel-2); border-bottom:1px solid var(--line-soft); display:flex; align-items:center; gap:9px; padding:0 18px }
+      .term .bar i { width:11px; height:11px; border-radius:50%; background:var(--line); display:block }
+      .term .bar span { margin-left:12px; font-family:var(--mono); font-size:14px; color:var(--faint); letter-spacing:0.06em }
+      .term .body { padding:34px 38px; min-height:240px }
+      .ln { font-family:var(--mono); font-size:27px; line-height:1.85; color:var(--muted); white-space:pre-wrap }
+      .ln .p { color:var(--accent) }
+      .ln.you { color:var(--fg) }
+      .ln.ai { color:var(--muted) }
+      .cursor { color:var(--accent) }
 
-      /* token rows ----------------------------------------------------------- */
-      .tokrow {
-        display: flex; align-items: center; gap: 24px; padding: 19px 0;
-        border-bottom: 1px solid var(--line-soft);
-      }
-      .tokrow:last-child { border-bottom: 0; }
-      .tokrow .k { font-family: var(--mono); font-size: 25px; color: var(--accent); width: 8.5ch; }
-      .tokrow .v { font-family: var(--mono); font-size: 25px; color: var(--fg); flex: 1; }
-      .tokrow .sw { width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--line); }
+      .tokrow { display:flex; align-items:center; gap:24px; padding:19px 0; border-bottom:1px solid var(--line-soft) }
+      .tokrow:last-child { border-bottom:0 }
+      .tokrow .k { font-family:var(--mono); font-size:25px; color:var(--accent); width:8.5ch }
+      .tokrow .v { font-family:var(--mono); font-size:25px; color:var(--fg); flex:1 }
+      .tokrow .sw { width:30px; height:30px; border-radius:6px; border:1px solid var(--line) }
 
-      /* mini surface tiles ---------------------------------------------------- */
-      .tile { border: 1px solid var(--line); border-radius: 10px; background: var(--panel); position: relative; }
-      /* Content bars. GLOBAL on purpose: slides, deck cards, essay cards and the
-         week strip all draw their fake content with these, so scoping them to
-         .tile silently blanks four scenes. */
-      .tl { position: absolute; left: 14px; top: 13px; height: 8px; border-radius: 4px; background: var(--accent); }
-      .tb { position: absolute; left: 14px; height: 7px; border-radius: 4px; background: var(--line); }
-      .tcap { position: absolute; left: 0; right: 0; bottom: -34px; text-align: center; font-family: var(--mono); font-size: 15px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); }
+      .tile { border:1px solid var(--line); border-radius:10px; background:var(--panel); position:relative }
+      /* content bars: GLOBAL on purpose — slides, deck cards, essay cards and
+         the week strip all draw their fake content with these */
+      .tl { position:absolute; left:14px; top:13px; height:8px; border-radius:4px; background:var(--accent) }
+      .tb { position:absolute; left:14px; height:7px; border-radius:4px; background:var(--line) }
+      .tcap { position:absolute; left:0; right:0; bottom:-34px; text-align:center; font-family:var(--mono); font-size:15px; letter-spacing:0.14em; text-transform:uppercase; color:var(--faint) }
 
-      /* slides ---------------------------------------------------------------- */
-      .slide { width: 372px; height: 465px; position: relative; }
-      .slide.sel { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
-      .row { display: flex; align-items: center; justify-content: center; gap: 30px; }
+      .slide { width:372px; height:465px; position:relative }
+      .slide.sel { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft) }
+      .row { display:flex; align-items:center; justify-content:center; gap:30px }
 
-      /* filmstrip -------------------------------------------------------------- */
-      #strip { display: flex; gap: 10px; }
-      #strip .fr { width: 152px; height: 152px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); position: relative; overflow: hidden; }
-      #strip .fr b { position: absolute; border-radius: 50%; background: var(--accent); display: block; }
-      #wave { display: flex; align-items: flex-end; gap: 7px; height: 124px; }
-      #wave i { width: 9px; background: var(--accent); border-radius: 3px; display: block; height: 4px; }
+      /* a press sheet: the blue plate under, the orange plate on top, each on
+         its own y so they can drop and land separately */
+      .sheet { position:relative }
+      .sheet .plate { position:absolute; inset:0; border:2.5px solid #2b3a8f; border-radius:var(--radius); transform:translate(-6px,6px); mix-blend-mode:multiply; opacity:.9 }
+      .sheet .plate .tl, .sheet .plate .tb { background:#2b3a8f }
+      .stamp { position:absolute; font-family:var(--mono); font-size:44px; letter-spacing:.14em; text-transform:uppercase; color:#e8480a;
+               border:5px solid #e8480a; border-radius:8px; padding:10px 26px; mix-blend-mode:multiply; white-space:nowrap }
 
-      /* pipes ------------------------------------------------------------------ */
-      .pill {
-        font-family: var(--mono); font-size: 20px; letter-spacing: 0.08em;
-        text-transform: uppercase; padding: 15px 25px; border-radius: 9px;
-        border: 1px solid var(--line); color: var(--muted); background: var(--panel);
-        white-space: nowrap;
-      }
-      .pill.on { border-color: var(--accent-line); background: var(--accent-soft); color: var(--accent); }
+      #strip { display:flex; gap:10px }
+      #strip .fr { width:152px; height:152px; border-radius:8px; border:1px solid var(--line); background:var(--panel); position:relative; overflow:hidden }
+      #strip .fr i { position:absolute; left:0; right:0; display:block }
+      #strip .fr b { position:absolute; border-radius:50%; background:#f3c67e; display:block }
+      #wave { display:flex; align-items:flex-end; gap:7px; height:124px }
+      #wave i { width:9px; background:var(--accent); border-radius:3px; display:block; height:4px }
 
-      /* calendar --------------------------------------------------------------- */
-      .crow { display: flex; align-items: center; gap: 22px; padding: 17px 26px; border-bottom: 1px solid var(--line-soft); }
-      .crow:last-child { border-bottom: 0; }
-      .box { width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid var(--line); position: relative; flex: none; }
-      .box .tick { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--accent-ink); font-size: 17px; opacity: 0; }
-      .crow .t { font-family: var(--sans); font-weight: 500; font-size: 26px; color: var(--muted); flex: 1; }
-      .crow .d { font-family: var(--mono); font-size: 17px; color: var(--faint); letter-spacing: 0.1em; }
+      /* the timeline diagram — the picture of this file */
+      .tlcard { width:1400px; padding:28px 36px 30px }
+      .tlhead { font-size:17px; letter-spacing:.2em; text-transform:uppercase; color:var(--faint); margin-bottom:22px }
+      .ruler { position:relative; height:14px; margin:0 0 6px; border-bottom:1px solid var(--line-soft) }
+      .ruler i { position:absolute; top:6px; width:1px; height:8px; background:var(--line-soft) }
+      .lane { position:relative; height:70px }
+      .lane .tw { position:absolute; top:10px; height:44px; border-radius:var(--radius); background:var(--accent); color:var(--accent-ink);
+                  display:flex; align-items:center; gap:14px; padding:0 16px; font-family:var(--mono); font-size:18px; white-space:nowrap; overflow:hidden }
+      .lane .tw b { font-weight:400; opacity:.75 }
+      .lane .at { position:absolute; top:58px; font-size:14px; letter-spacing:.08em; color:var(--muted); white-space:nowrap }
+      .ph { position:absolute; top:78px; bottom:64px; width:3px; background:var(--fg) }
+      .ph::before { content:""; position:absolute; left:-7px; top:-10px; border:8px solid transparent; border-top:10px solid var(--fg) }
+      .code { margin-top:10px; font-size:19px; color:var(--muted); letter-spacing:.02em }
+      .code .o { color:var(--accent) }
+      .wrow { display:flex; align-items:center; gap:18px; margin-top:26px; font-family:var(--mono); font-size:16px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted) }
+      .wsw { width:46px; height:46px; border:2px solid var(--line); border-radius:var(--radius) }
 
-      /* clock ------------------------------------------------------------------- */
-      #clock { width: 210px; height: 210px; }
+      .pill { font-family:var(--mono); font-size:20px; letter-spacing:0.08em; text-transform:uppercase; padding:15px 25px; border-radius:9px;
+              border:1px solid var(--line); color:var(--muted); background:var(--panel); white-space:nowrap }
+      .pill.on { border-color:var(--accent-line); background:var(--accent-soft); color:var(--accent) }
+
+      .crow { display:flex; align-items:center; gap:22px; padding:17px 26px; border-bottom:1px solid var(--line-soft) }
+      .crow:last-child { border-bottom:0 }
+      .box { width:32px; height:32px; border-radius:8px; border:1.5px solid var(--line); position:relative; flex:none }
+      .box .tick { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:var(--accent-ink); font-size:17px; opacity:0 }
+      .crow .t { font-family:var(--sans); font-weight:500; font-size:26px; color:var(--muted); flex:1 }
+      .crow .d { font-family:var(--mono); font-size:17px; color:var(--faint); letter-spacing:0.1em }
+
+      /* ── per-world furniture: what a card IS in each material ─────────── */
+      .stage[data-world="hand"] .card, .stage[data-world="hand"] .term, .stage[data-world="hand"] .tile {
+        border:2px solid var(--line); border-radius:255px 14px 225px 14px / 14px 225px 14px 255px }
+      .stage[data-world="hand"] .term .bar { border-radius:255px 14px 0 0 / 14px 225px 0 0 }
+      .stage[data-world="hand"] .big { font-weight:700; font-size:136px; letter-spacing:0; line-height:1.02 }
+      .stage[data-world="hand"] .lede { font-size:46px }
+      .stage[data-world="hand"] .ln { font-size:36px; line-height:1.55 }
+      .stage[data-world="hand"] .term .bar span { font-size:24px }
+      .stage[data-world="hand"] .tokrow .k, .stage[data-world="hand"] .tokrow .v { font-size:32px }
+      .stage[data-world="hand"] .tokrow .sw { border-radius:60% 40% 55% 45% / 45% 55% 40% 60%; border:0 }
+      .stage[data-world="hand"] .tl, .stage[data-world="hand"] .tb { border-radius:3px 5px 4px 6px / 5px 3px 6px 4px; opacity:.85 }
+      .stage[data-world="hand"] .tcap { font-size:22px; letter-spacing:.02em; text-transform:none }
+
+      .stage[data-world="neon"] .card, .stage[data-world="neon"] .tile {
+        box-shadow:0 0 14px rgba(255,110,20,.5), inset 0 0 16px rgba(255,110,20,.16) }
+      .stage[data-world="neon"] .ln, .stage[data-world="neon"] .pill, .stage[data-world="neon"] .tcap {
+        text-shadow:0 0 12px rgba(255,140,40,.9), 0 0 32px rgba(255,90,10,.5) }
+      .stage[data-world="neon"] .tb, .stage[data-world="neon"] .tl { box-shadow:0 0 8px rgba(255,120,30,.6) }
+      .stage[data-world="neon"] .ln { font-size:29px }
+
+      .stage[data-world="press"] .card, .stage[data-world="press"] .tile { border:2.5px solid var(--line); mix-blend-mode:multiply }
+      .stage[data-world="press"] .tb { background-color:transparent;
+        background-image:radial-gradient(circle, #2b3a8f 1.1px, transparent 1.4px); background-size:5px 5px; height:9px; opacity:.85 }
+      .stage[data-world="press"] .big { font-weight:900 }
+      .stage[data-world="press"] .halftone { position:absolute; inset:52px 18px 18px;
+        background-image:radial-gradient(circle, #e8480a 1.6px, transparent 1.9px); background-size:7px 7px; opacity:.8 }
+
+      .stage[data-world="cel"] .card, .stage[data-world="cel"] .tile { border:3px solid var(--line) }
+      .stage[data-world="cel"] .tb { background:#f6ead6; opacity:.55 }
     </style>
   </head>
   <body>
     <div class="canvas">
-      <div class="stage">
-        <div id="hdr">
-          <div class="logo-lockup"><span class="wordmark">swel</span></div>
-          <span id="chapter"></span>
+      <div class="stage" id="stage" data-world="hand">
+        <svg width="0" height="0" style="position:absolute"><defs>
+          <filter id="paperF"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="4" seed="3"/><feColorMatrix type="saturate" values="0"/></filter>
+          <filter id="wob"><feTurbulence type="fractalNoise" baseFrequency="0.024" numOctaves="3" seed="7" result="n"/>
+            <feDisplacementMap id="wobMap" in="SourceGraphic" in2="n" scale="0" xChannelSelector="R" yChannelSelector="G"/></filter>
+          <linearGradient id="chrome" x1="0" y1="0" x2="0" y2="1">
+            <stop id="c0" offset="0%"   stop-color="#1b2430"/><stop id="c1" offset="34%" stop-color="#1b2430"/>
+            <stop id="c2" offset="52%"  stop-color="#1b2430"/><stop id="c3" offset="72%" stop-color="#1b2430"/>
+            <stop id="c4" offset="100%" stop-color="#1b2430"/>
+          </linearGradient>
+        </defs></svg>
+
+        <!-- the grounds -->
+        <div id="ground">
+          <div class="layer" id="bg"></div>
+          <div class="layer" id="grain"><svg xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" filter="url(#paperF)"/></svg></div>
+          <div class="layer" id="vig"></div>
+          <div class="layer" id="sky"></div>
+          <div id="sun"></div>
+          <div id="hz"></div>
+          <div id="floor"><svg viewBox="0 0 1920 429" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <g stroke="#ff6a12" stroke-width="2" opacity=".85">
+              <line x1="960" y1="0" x2="-1800" y2="429"/><line x1="960" y1="0" x2="-1100" y2="429"/><line x1="960" y1="0" x2="-500" y2="429"/>
+              <line x1="960" y1="0" x2="-70" y2="429"/><line x1="960" y1="0" x2="280" y2="429"/><line x1="960" y1="0" x2="560" y2="429"/>
+              <line x1="960" y1="0" x2="790" y2="429"/><line x1="960" y1="0" x2="960" y2="429"/><line x1="960" y1="0" x2="1130" y2="429"/>
+              <line x1="960" y1="0" x2="1360" y2="429"/><line x1="960" y1="0" x2="1640" y2="429"/><line x1="960" y1="0" x2="1990" y2="429"/>
+              <line x1="960" y1="0" x2="2420" y2="429"/><line x1="960" y1="0" x2="3020" y2="429"/><line x1="960" y1="0" x2="3720" y2="429"/>
+              <g id="hzg"></g>
+            </g></svg></div>
+          <div class="layer" id="dots"></div>
+          <div class="layer" id="yotei"></div>
         </div>
 
-        <!-- scenes are built in JS so the repetitive markup stays readable -->
+        <!-- the acts are built in JS so the repetitive markup stays readable -->
         <div id="scenes"></div>
+
+        <div class="layer" id="scan"></div>
+        <div id="bloom"></div>
+        <div class="layer" id="celFlash"></div>
+        <div id="celRing"></div>
+        <div class="layer" id="flash"></div>
+        <div id="crt"></div>
+
+        <!-- the header: the studio lockup, and the world's word for "studio" -->
+        <div id="hdr">
+          <div id="brandlock">
+            <div id="lockup">
+              <svg viewBox="-1.5 -80.4 250.73 86.4">
+                <text id="word" x="2.5" y="0" textLength="182.8" lengthAdjust="spacingAndGlyphs">swel</text>
+                <g id="gHand" transform="translate(31 -14) rotate(-2.2 92.9 -20)">
+                  <mask id="write" maskUnits="userSpaceOnUse" x="-40" y="-110" width="330" height="150">
+                    <g id="wm" fill="none" stroke="#fff" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M 26 -29 C 20 -34, 8 -32, 6 -24 C 4 -17, 16 -14, 20 -10 C 24 -6, 20 0, 12 1 C 8 1, 5 0, 3 -2"/>
+                      <path d="M 33 -31 C 35 -20, 38 -6, 42 0 C 46 -8, 49 -22, 52 -32 C 54 -21, 57 -6, 61 0 C 65 -8, 69 -22, 73 -32"/>
+                      <path d="M 79 -18 C 87 -19, 94 -20, 98 -21 C 99 -28, 93 -32, 86 -31 C 78 -30, 75 -22, 76 -13 C 77 -5, 85 -1, 93 -3 C 97 -4, 100 -7, 102 -10"/>
+                      <path d="M 114 -47 C 112 -34, 109 -18, 108 -6 C 107 -1, 110 1, 116 0"/>
+                    </g>
+                  </mask>
+                  <g filter="url(#wob)">
+                    <text id="hword" x="0" y="0" font-family="Caveat" font-weight="700" font-size="86" fill="var(--ink)" mask="url(#write)">swel</text>
+                    <path id="hunder" d="M 2 9 C 44 5, 92 13, 140 7" fill="none" stroke="var(--vink)" stroke-width="3.4" stroke-linecap="round"/>
+                  </g>
+                  <g id="hV" transform="translate(126 -38.4) scale(0.4810) translate(-18 -12)" filter="url(#wob)">
+                    <path id="hcrest" fill="none" stroke="var(--vink)" stroke-width="12.5" stroke-linecap="round"/>
+                    <path id="hswell" fill="none" stroke="var(--vink)" stroke-width="7.5" stroke-linecap="round" opacity="0.5"/>
+                  </g>
+                </g>
+                <g transform="translate(175.28 -61.39) scale(0.6957)" id="vmk"><path id="vcrest"/><path id="vswell"/></g>
+              </svg>
+            </div>
+            <div id="qual">
+              <span class="q-hand">studio</span><span class="q-neon">studio</span>
+              <span class="q-press">studio</span><span class="q-cel">スタジオ</span>
+            </div>
+          </div>
+          <div id="kitlock" class="logo-lockup"><span class="wordmark">swel</span></div>
+          <span id="kitqual">studio</span>
+          <span id="chapter"></span>
+        </div>
 
         <div id="sub"></div>
         <div id="prog"><i></i></div>
       </div>
     </div>
+    <script src="../../posts/vendor/gsap.min.js"></script>
     <script src="timings.js"></script>
+    <script src="worlds.js"></script>
     <script src="timeline.js"></script>
   </body>
 </html>

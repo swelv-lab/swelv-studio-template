@@ -104,8 +104,13 @@ window.renderFrame = u => window.seek(u * DUR);
 - Eases with overshoot (`back.out`, `expo.out`) are for *arrivals* in brand
   films — a plate landing, a card turning back. Product scenes keep rule 4.
 
-The worked example is `examples/logo-metamorphosis/metamorphosis.html`: three
-worlds, every join built rather than blurred, on one GSAP timeline.
+Two worked examples. `examples/logo-metamorphosis/metamorphosis.html` is the
+material side: three worlds, every join built rather than blurred, on one GSAP
+timeline. `examples/explainer/timeline.js` is the sequencing side, and the one
+to copy for anything with several scenes: every tween anchored to a line of the
+narration, a `build()` + `cues()` pair per scene, one entrance helper per
+material, a `post(t)` for the caret and the playhead, and a cue sheet
+(`sound.json`) anchored the same way the picture is.
 
 ## Steps
 

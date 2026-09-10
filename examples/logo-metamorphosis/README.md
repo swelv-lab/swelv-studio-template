@@ -96,8 +96,9 @@ is not a frame you can render twice.
 
 ## Why two clips
 
-The ender is this brand's reusable sign-off — it gets concatenated onto other
-films too. Rendering it separately means it is built once and stream-copied on,
+The ender is this brand's reusable sign-off — it lives in [`../ender/`](../ender/)
+and gets concatenated onto other films too (the explainer ends on it). Rendering
+it separately means it is built once and stream-copied on,
 never re-encoded. The story fades to bare navy and the ender opens on the same
 navy, so the join is invisible.
 
@@ -116,7 +117,7 @@ Nothing here gets an exemption for being the showpiece:
   quadruple the work for a master nobody watches at that size. See *Master
   size* in the `new-video` skill.
 - **The sound is synthesized from a JSON file** — `metamorphosis.audio.json`
-  and `ender.audio.json`, laid by `posts/render-audio.js`. Each world has its
+  and `../ender/ender.audio.json`, laid by `posts/render-audio.js`. Each world has its
   own voice: a nib scratch per pen stroke, a gated stab and an arpeggio for the
   arcade, a zap as the tube collapses and one thock per plate as the press
   runs, a deep strike as the mark hits the water.

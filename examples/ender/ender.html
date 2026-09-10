@@ -1,0 +1,177 @@
+<!doctype html>
+<!-- ---------------------------------------------------------------------------
+  swelv studio · the ender (1920x1080 @ 30fps, 6.5s)
+
+  The mark lands on water. The ground is a lattice - a matrix of points and the
+  hairlines between them - sitting almost still, breathing on a long idle swell.
+  When the solid V arrives it does not fade in: it hits, and the lattice takes
+  the hit, a front of energy travelling out through it and dying away. The two
+  trail Vs land behind it and each throws its own, smaller wave.
+
+  It is the brand's own story told in one gesture: swell plus evolve. Capital,
+  or content, moves in waves.
+
+  The surface is a pure function of t - every point's displacement is a sum of
+  radial wave fronts with fixed launch times - so seek(t) repaints it exactly.
+---------------------------------------------------------------------------- -->
+<html lang="en"><head><meta charset="utf-8" />
+<style>
+  @font-face { font-family:"Satoshi"; src:url("fonts/Satoshi-Bold.otf") format("opentype"); font-weight:700; font-display:block }
+  @font-face { font-family:"Satoshi"; src:url("fonts/Satoshi-Medium.otf") format("opentype"); font-weight:500; font-display:block }
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0a0e27;--orange:#ff5100;--fg:#fff;--faint:#8a93b6;
+        --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;--sans:"Satoshi",sans-serif}
+  html,body{width:1920px;height:1080px;overflow:hidden;background:var(--bg)}
+  .stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:var(--bg);
+    font-family:var(--sans);-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
+  #bed{position:absolute;inset:0}
+  #water{position:absolute;inset:0}
+  #mark{position:absolute;left:50%;top:288px;margin-left:-270px;width:540px}
+  #mark svg{display:block;overflow:visible;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  #mark .c{stroke:var(--orange);stroke-width:12.5}
+  #mark .s{stroke:var(--orange);stroke-width:10}
+  #word{position:absolute;left:0;right:0;top:598px;text-align:center;
+    font-weight:700;font-size:104px;letter-spacing:-.05em;line-height:1;color:var(--fg)}
+  #qual{position:absolute;left:0;right:0;top:722px;text-align:center;font-family:var(--mono);
+    font-size:27px;letter-spacing:.52em;text-indent:.52em;text-transform:uppercase;color:var(--orange)}
+  #tag{position:absolute;left:0;right:0;top:822px;text-align:center;
+    font-weight:500;font-size:31px;letter-spacing:-.01em;color:var(--fg)}
+  #tag em{font-style:normal;color:var(--orange)}
+  #site{position:absolute;left:0;right:0;top:980px;text-align:center;font-family:var(--mono);
+    font-size:19px;letter-spacing:.06em;color:var(--faint)}
+</style></head>
+<body><div class="stage">
+  <!-- the stale surface: a diamond lattice, drawn once and never moved -->
+  <svg id="bed" width="1920" height="1080">
+    <defs>
+      <pattern id="lat" width="62" height="62" patternUnits="userSpaceOnUse">
+        <path d="M 0 31 L 31 0 L 62 31 L 31 62 Z" fill="none" stroke="#5f6f9e" stroke-width="1"/>
+        <circle cx="31" cy="31" r="1.5" fill="#6b7cae"/>
+        <circle cx="0"  cy="0"  r="1.2" fill="#6b7cae"/><circle cx="62" cy="0"  r="1.2" fill="#6b7cae"/>
+        <circle cx="0"  cy="62" r="1.2" fill="#6b7cae"/><circle cx="62" cy="62" r="1.2" fill="#6b7cae"/>
+      </pattern>
+      <radialGradient id="vig" cx="54%" cy="40%" r="72%">
+        <stop offset="0%" stop-color="#fff" stop-opacity="1"/><stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+      </radialGradient>
+      <mask id="fade"><rect width="1920" height="1080" fill="url(#vig)"/></mask>
+    </defs>
+    <rect width="1920" height="1080" fill="url(#lat)" mask="url(#fade)" opacity="0.26"/>
+  </svg>
+  <!-- and the water, which only exists where the surface is disturbed -->
+  <canvas id="water" width="1920" height="1080"></canvas>
+  <div id="mark">
+    <svg viewBox="10 8 190 96">
+      <g id="g1"><path class="c" d="M 30 24 L 60 82 L 90 24"/></g>
+      <g id="g2"><path class="c" d="M 30 24 L 60 82 L 90 24"/></g>
+      <g id="g3"><path class="c" d="M 30 24 L 60 82 L 90 24"/><path class="s" id="sw" d="M 45 22 L 60 49 L 75 22"/></g>
+    </svg>
+  </div>
+  <div id="word">swelv</div>
+  <div id="qual">studio</div>
+  <div id="tag"><em>Content infrastructure</em> in motion.</div>
+  <div id="site">swelv.io</div>
+
+<script>
+const DUR = 6.5;
+const clamp01=x=>Math.max(0,Math.min(1,x)), lin=(t,a,b)=>clamp01((t-a)/(b-a));
+const eoq=x=>1-Math.pow(1-x,4);
+const $=id=>document.getElementById(id);
+const g1=$("g1"),g2=$("g2"),g3=$("g3"),sw=$("sw");
+const word=$("word"),qual=$("qual"),tag=$("tag"),site=$("site");
+const up=(t,t0,d,rise)=>{const p=eoq(lin(t,t0,t0+d));return{o:clamp01(lin(t,t0,t0+d*.6)),dy:rise*(1-p)}};
+
+/* Each V settles into its own place, so the last frame IS the mark:
+   solid at 76, one step back at 38, one before that at 0. */
+const HOME=[0,38,76];
+const LAND=[0.72,1.02,1.24];              /* solid first, the trail behind it */
+
+/* ── the water ───────────────────────────────────────────────────────────
+   The bed above never moves. This layer draws the SAME lattice again, but
+   displaced by the wave and only where there is energy, so what you see is the
+   still surface with a moving one refracting over it. On top of that go the
+   crests themselves: expanding rings, bright on the rise, dark in the trough. */
+const cv=$("water"), ctx=cv.getContext("2d");
+const SP=62;                                   /* matches the bed's pattern */
+const SRC=[[1048,416,1.00],[938,416,0.44],[830,416,0.28]];
+
+/* displacement and energy at a point, as a sum of expanding fronts */
+function wave(x,y,t){
+  let a=0, e=0;
+  for(let s=0;s<3;s++){
+    const dt=t-LAND[s]; if(dt<=0) continue;
+    const dx=x-SRC[s][0], dy=y-SRC[s][1], r=Math.sqrt(dx*dx+dy*dy)+1e-6;
+    const front=dt*520;
+    const band=Math.exp(-Math.pow((r-front)/260,2));
+    const decay=Math.exp(-dt*0.5);
+    const amp=SRC[s][2]*34*band*decay;
+    a += amp*Math.sin(r*0.052-dt*7.4);
+    e += Math.abs(amp)/34;
+  }
+  /* a long idle swell, so the surface breathes even before the V arrives */
+  a += 2.2*Math.sin(x*0.0055+y*0.008-t*0.8);
+  return [a, Math.min(1,e)];
+}
+function disp(x,y,t){
+  const [a] = wave(x,y,t);
+  const dx=x-SRC[0][0], dy=y-SRC[0][1], r=Math.sqrt(dx*dx+dy*dy)+1e-6;
+  return [x+(dx/r)*a, y+(dy/r)*a];
+}
+
+function drawWater(t,fade){
+  ctx.clearRect(0,0,1920,1080);
+  const COLS=Math.ceil(1920/SP)+2, ROWS=Math.ceil(1080/SP)+2;
+
+  /* 1 · the refracted lattice — the bed's own diamonds, bent by the wave */
+  ctx.lineWidth=1.2;
+  for(let j=0;j<ROWS;j++) for(let i=0;i<COLS;i++){
+    const x=i*SP-SP, y=j*SP-SP;
+    const [,e]=wave(x+31,y+31,t);
+    if(e<0.045) continue;                       /* still water stays still */
+    const pts=[[x,y+31],[x+31,y],[x+62,y+31],[x+31,y+62]].map(q=>disp(q[0],q[1],t));
+    ctx.strokeStyle=`rgba(${Math.round(150+105*e)},${Math.round(190+40*e)},255,${(0.5*e)*fade})`;
+    ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]);
+    for(let k=1;k<4;k++) ctx.lineTo(pts[k][0],pts[k][1]);
+    ctx.closePath(); ctx.stroke();
+    const c=disp(x+31,y+31,t);
+    ctx.fillStyle=`rgba(255,${Math.round(210-60*e)},${Math.round(200-190*e)},${(0.75*e)*fade})`;
+    ctx.beginPath(); ctx.arc(c[0],c[1],1.1+2.2*e,0,6.2832); ctx.fill();
+  }
+
+  /* 2 · the crests: each front is a ring, bright where the water is rising */
+  for(let s=0;s<3;s++){
+    const dt=t-LAND[s]; if(dt<=0||dt>3.4) continue;
+    const decay=Math.exp(-dt*0.5), front=dt*520;
+    for(let n=-3;n<=3;n++){
+      const r=front+n*60; if(r<8) continue;
+      const ph=Math.sin(-n*3.14+dt*0.6);
+      const w=Math.exp(-Math.pow(n/2.4,2))*decay*SRC[s][2];
+      if(w<0.02) continue;
+      ctx.lineWidth=(1+2.6*w)*(ph>0?1:0.7);
+      ctx.strokeStyle= ph>0
+        ? `rgba(214,236,255,${(0.46*w)*fade})`
+        : `rgba(10,16,46,${(0.40*w)*fade})`;
+      ctx.beginPath(); ctx.arc(SRC[s][0],SRC[s][1],r,0,6.2832); ctx.stroke();
+    }
+  }
+}
+
+window.seek = function(t){
+  drawWater(t, 0.55+0.45*eoq(lin(t,0,0.9)));
+
+  /* the solid V lands first; the trail slides in behind it */
+  [[g3,2,LAND[0],1.00,150],[g2,1,LAND[1],0.42,120],[g1,0,LAND[2],0.16,96]].forEach(([g,i,t0,op,back])=>{
+    const p=eoq(lin(t,t0,t0+0.80));
+    g.setAttribute("transform",`translate(${HOME[i]-back*(1-p)} ${-26*(1-p)})`);
+    g.style.opacity=(op*clamp01(lin(t,t0,t0+0.22))).toFixed(3);
+  });
+  sw.style.opacity=(0.5*eoq(lin(t,1.46,1.84))).toFixed(3);
+
+  const w=up(t,2.24,0.62,26); word.style.opacity=w.o; word.style.transform=`translateY(${w.dy}px)`;
+  const q=up(t,2.56,0.58,20); qual.style.opacity=q.o; qual.style.transform=`translateY(${q.dy}px)`;
+  const g=up(t,3.22,0.68,24); tag.style.opacity=g.o;  tag.style.transform=`translateY(${g.dy}px)`;
+  const s=up(t,4.10,0.70,14); site.style.opacity=0.85*s.o; site.style.transform=`translateY(${s.dy}px)`;
+};
+window.renderFrame = u => window.seek(u * DUR);
+function hashSeek(){const h=parseFloat((location.hash||"").slice(1));if(!Number.isNaN(h))window.seek(h*DUR)}
+addEventListener("hashchange",hashSeek); window.seek(0); hashSeek();
+</script></div></body></html>

@@ -17,16 +17,27 @@ with the rules open beside them.
 | Example | What it demonstrates |
 | ------- | -------------------- |
 | [`brand-is-a-file/`](brand-is-a-file/) | A 3-slide carousel with its caption. Three slides, one argument, and a 76-word caption that does not narrate them. |
-| [`explainer/`](explainer/) | An 80-second narrated film. The pattern: time the picture to the voice, never the other way round. |
+| [`explainer/`](explainer/) | A 95-second narrated film in five materials. The patterns: time the picture to the voice; sequence with one paused GSAP timeline; give each material its own entrance; build the joins. **Read this one to learn how video is sequenced here.** |
+| [`ender/`](ender/) | The brand's 6.5-second sign-off. Rendered once, stream-copied onto every film. |
 | [`logo-metamorphosis/`](logo-metamorphosis/) | A 16-second logo film, and a logo system behind it. The patterns: interpolate state, not pictures; sequence with a paused GSAP timeline; build every join, never blur it. |
 
 More land as they are built: a deck, an essay.
 
+## Reading the explainer
+
+[`explainer/`](explainer/) is the one to read if you are making anything
+animated. Its `timeline.js` is written top to bottom as the worked example of
+sequencing here — one paused GSAP timeline, every tween anchored to a line of
+the narration, a `build()` + `cues()` pair per scene, and a `post(t)` for the
+handful of things that are a function of `t` rather than a tween. Its fourth
+act explains the mechanism on screen, with the film's own playhead. The
+README walks through it.
+
 ## Reading the logo film
 
-[`logo-metamorphosis/`](logo-metamorphosis/) is the one to read if you are
-making anything animated, because it is built the way animation in this repo
-should be built:
+[`logo-metamorphosis/`](logo-metamorphosis/) is the one to read for the
+*material* side — how a world is built and how two of them are joined — because
+it is built the way animation in this repo should be built:
 
 - **One lockup that is never replaced.** Thirty-odd numbers define how it looks;
   each world is one object of those numbers; every frame lerps between two and
@@ -44,9 +55,9 @@ should be built:
   lockup turns over like a card; the screen switches off like a CRT and the press
   drops its two plates one after the other. A cross-fade between finished worlds
   is a slideshow, and it looks like one.
-- **Two clips, stream-copied together.** The ender is reusable, so it is
-  rendered once and joined without re-encoding. Both clips therefore have to
-  match in size.
+- **Two clips, stream-copied together.** The ender is reusable, so it lives in
+  its own folder ([`ender/`](ender/)), is rendered once and joined without
+  re-encoding. Every clip it is joined to therefore has to match it in size.
 
 ## Reading the carousel
 

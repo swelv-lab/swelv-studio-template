@@ -1,33 +1,68 @@
 /* ===========================================================================
-   The explainer timeline.
+   THE EXPLAINER · one paused GSAP timeline, anchored to the voice
 
-   One rule governs this whole file: renderFrame(t) is a PURE FUNCTION OF t.
-   No Date.now(), no requestAnimationFrame, no CSS transitions, no randomness.
-   The renderer screenshots t = 0 .. 1 across DUR seconds, so any impurity shows
-   up as a frame that will not reproduce.
+   Read this file as the worked example of how video is sequenced in this
+   studio. There are four ideas in it, and they are worth more than any of the
+   individual moves:
 
-   Timings come from timings.js, which build.py generates from the measured
-   narration. Change a word in script.json, re-run voice.py and build.py, and
-   every animation below re-anchors itself.
+   1 · EVERY FRAME IS A PURE FUNCTION OF t. The renderer screenshots
+       renderFrame(0..1) across DUR seconds. No Date.now(), no rAF, no CSS
+       transitions, no randomness — any of those makes a frame that will not
+       reproduce. GSAP is allowed under that rule because the timeline is
+       PAUSED: tl.seek(t) is a lookup, not a playback.
+
+   2 · THE ANCHORS COME FROM THE VOICE. timings.js is generated from the
+       measured narration, so L.print.start is the real second she starts the
+       line with id "print". Every tween is positioned at `L.<line>.start +
+       offset` and the timeline reads like the script: "the file appears 0.55s
+       after she says 'one file'". Change a word, re-run voice.py and build.py,
+       and every move — and every sound cue, see sound.json — re-anchors.
+
+   3 · A SCENE IS build() + cues(). build() makes DOM once and hands back refs;
+       cues() adds that scene's tweens to the ONE timeline. There is no
+       per-scene draw loop; GSAP owns the interpolation. The few things that
+       are genuinely a function of t rather than a tween — a blinking caret,
+       the filmstrip's playhead, subtitles, the progress bar, the scrolling
+       floor — live in post(), which runs after every seek.
+
+   4 · THE JOINS ARE PHYSICAL, AND EACH WORLD HAS AN ENTRANCE. Content in the
+       hand act is WRITTEN (a clip wipe); in neon it SWITCHES ON (a CRT
+       expanding from a line); in press it is PRINTED (a blue plate lands, then
+       the orange); in cel it is CUT (a hard cut with a one-frame flash); in
+       brand it RISES. The five helpers are ten lines each, and the acts read
+       as different materials because the same card arrives differently.
+
+   Two traps, both learned by hitting them:
+     · never write style.transform on an element GSAP is transforming — it
+       stamps over GSAP's value every frame. Route it through gsap.set.
+     · tl.seek(t, true) suppresses callbacks, so an onUpdate never fires under
+       seek. Anything derived from a tweened value is applied in post().
    ========================================================================= */
 
 const L = T.lines;
-const SIGNOFF = 4.6; // the branded hold after the last word
-const DUR = T.total + SIGNOFF;
+const TAIL = 0.9;                        // bare navy after the last word; the ender opens on it
+const DUR = T.total + TAIL;
+const FPS = 30, F = 1 / FPS;
+const W = 1920, H = 1080;
+const TOTAL_FRAMES = Math.round(DUR * FPS);
 
-/* -- easing ---------------------------------------------------------------- */
+/* the four joins, named once. Everything below positions itself off these. */
+const T1  = L.turn.start + 0.10;         // hand → neon: the page turns over
+const T2  = L.print.start - 0.45;        // neon → press: the screen switches off
+const T3  = L.video1.start - 0.10;       // press → cel: the sheet is pulled
+const HIT = L.video1.end - 0.12;         // the cut that opens the cel act
+const T4  = L.video4.end + 0.03;         // cel → brand: the last cut
+
+/* -- helpers ---------------------------------------------------------------- */
 const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
-const seg = (t, a, b) => cl((t - a) / (b - a || 1e-6)); // 0..1 between two times
-const eo = (x) => 1 - Math.pow(1 - x, 4); // easeOutQuart - the house rise
-const eio = (x) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
+const lin = (t, a, b) => cl((t - a) / (b - a || 1e-6));
+const eio = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const eoq = x => 1 - Math.pow(1 - x, 4);
 const lerp = (a, b, p) => a + (b - a) * p;
-/* a rise: fades up and settles. Every entrance in this video is this one move. */
-const rise = (el, p, dy = 26) => {
-  el.style.opacity = p;
-  el.style.transform = `translateY(${(1 - eo(p)) * dy}px)`;
-};
-
-/* -- DOM helpers ----------------------------------------------------------- */
+const La = (a, b, p) => a.map((v, i) => lerp(v, b[i], p));
+const rgb = s => s.match(/[\d.]+/g).slice(0, 3).map(Number);
+const Lc = (a, b, p) => `rgb(${Math.round(lerp(a[0], b[0], p))},${Math.round(lerp(a[1], b[1], p))},${Math.round(lerp(a[2], b[2], p))})`;
+const $ = id => document.getElementById(id);
 const E = (tag, cls, css, html) => {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
@@ -35,668 +70,783 @@ const E = (tag, cls, css, html) => {
   if (html != null) e.innerHTML = html;
   return e;
 };
-const scenesEl = document.getElementById("scenes");
-const scenes = [];
-function scene(id, from, to, chapter, build, draw) {
-  const el = E("div", "scene");
-  scenesEl.appendChild(el);
-  const s = { id, from, to, chapter, el, draw, refs: {} };
-  s.refs = build(el, s) || {};
-  scenes.push(s);
-  return s;
+const SVG = (tag, attrs) => {
+  const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+};
+
+const stage = $("stage"), scenesEl = $("scenes"), hdrEl = $("hdr"), subEl = $("sub"), chapEl = $("chapter"), progEl = $("prog");
+const progBar = progEl.querySelector("i");
+
+/* ===========================================================================
+   THE ONE TIMELINE. lazy:false makes GSAP record a tween's start values the
+   first time it renders rather than a tick later — under seek there is no
+   later tick.
+   ========================================================================= */
+const tl = gsap.timeline({ paused: true, defaults: { overwrite: false, lazy: false } });
+/* numbers post() reads — tweened here, applied there */
+const S = { type: 0, type2: 0, msg: 0, ph: 0, wp: 0, done: 0, chapter: "" };
+const world = (name, at) => tl.set(stage, { attr: { "data-world": name } }, at);
+
+/* ===========================================================================
+   THE GROUND — the film's state machine. One object GSAP tweens; apply()
+   writes it to the DOM. Colours are CSS strings, which GSAP interpolates.
+   ========================================================================= */
+const V = {
+  handC: [27,22, 37,44,   50,69,   61,86, 71,68,   82,44,   93,23],
+  geoC:  [30,24, 40,43.33,50,62.67,60,82, 70,62.67,80,43.33,90,24],
+  handS: [47,19, 51,28,   56,38,   60,46, 64,38,   69,28,   73,20],
+  geoS:  [45,22, 50,31,   55,40,   60,49, 65,40,   70,31,   75,22],
+};
+const dOf = a => `M ${a[0]} ${a[1]} C ${a[2]} ${a[3]}, ${a[4]} ${a[5]}, ${a[6]} ${a[7]} C ${a[8]} ${a[9]}, ${a[10]} ${a[11]}, ${a[12]} ${a[13]}`;
+
+const cur = {
+  bg: "rgb(244,239,228)", ink: "rgb(27,36,48)", vink: "rgb(226,80,10)",
+  lw: 7.5, vw: 12.5, sw: 7.5, swo: 0.5, grain: 0.22, sky: 0, grid: 0, scan: 0, bloom: 0,
+  wordop: 0, handop: 1, vop: 0, wob: 2.2, sunY: 0, chrome: 0, vm: 0,
+  mtn: 0, dots: 0, dotsIn: 0, plate: 0, face: "hand", lockY: 0, blueY: 0,
+};
+const FACE = {
+  hand:  ['"Audiowide"', 400, 72],
+  neon:  ['"Audiowide"', 400, 60],
+  press: ['"Satoshi"', 900, 74],
+  cel:   ['"Noto Serif JP","Noto Serif CJK JP",serif', 900, 76],
+};
+const NEON_C  = { bg: "rgb(7,10,28)",     ink: "rgb(255,214,138)", vink: "rgb(255,180,80)", lw: 12, vw: 13,   sw: 9,  swo: 0.75, grain: 0 };
+const PRESS_C = { bg: "rgb(242,236,224)", ink: "rgb(232,72,10)",   vink: "rgb(232,72,10)",  lw: 12, vw: 12.5, sw: 10, swo: 0.55, grain: 0.30 };
+const CEL_C   = { bg: "rgb(22,36,60)",    ink: "rgb(246,234,214)", vink: "rgb(242,102,42)", swo: 0.85, grain: 0 };
+const NAVY    = "rgb(10,14,39)";
+
+const sun = $("sun"), floor = $("floor"), sky = $("sky"), hz = $("hz"), scan = $("scan"), bloom = $("bloom");
+const lockEl = $("lockup"), brandlock = $("brandlock"), qual = $("qual"), crt = $("crt"), flash = $("flash");
+const wobMap = $("wobMap"), vcrest = $("vcrest"), vswell = $("vswell"), hcrest = $("hcrest"), hswell = $("hswell"), hunder = $("hunder"), word = $("word");
+const wmPaths = [...$("wm").querySelectorAll("path")];
+const CH = [$("c0"), $("c1"), $("c2"), $("c3"), $("c4")];
+const CH_ON = [[255,246,226], [180,97,28], [255,255,255], [255,180,87], [168,58,8]];
+const neon = buildNeon(sun, $("hzg"), W);
+const DOT = buildDots($("dots"), W, 220);
+const yoteiHost = $("yotei");
+const yoteiUpdate = buildYotei(yoteiHost, W, H);
+const bands = yoteiHost._bands, celSun = yoteiHost._sun, celSvg = yoteiHost._svg;
+const celFlash = $("celFlash"), ring = $("celRing");
+
+function apply(s) {
+  const st = stage.style;
+  st.setProperty("--gbg", s.bg); st.setProperty("--ink", s.ink); st.setProperty("--vink", s.vink);
+  ["lw","vw","sw","swo","grain","sky","grid","scan","bloom","wordop","handop","mtn","dots"].forEach(k => st.setProperty("--" + k, s[k]));
+  wobMap.setAttribute("scale", s.wob.toFixed(2));
+  vcrest.setAttribute("d", dOf(La(V.handC, V.geoC, s.vm)));
+  vswell.setAttribute("d", dOf(La(V.handS, V.geoS, s.vm)));
+  $("vmk").style.opacity = s.vop;
+  hcrest.setAttribute("d", dOf(V.handC)); hswell.setAttribute("d", dOf(V.handS));
+  /* through GSAP, not style.transform: the CRT-off scales these same elements */
+  gsap.set(sun, { y: (1 - s.sunY) * 560 }); gsap.set(floor, { y: (1 - s.sunY) * 429 });
+  const ink = rgb(s.ink);
+  CH.forEach((el, i) => el.setAttribute("stop-color", Lc(ink, CH_ON[i], s.chrome)));
+  const f = FACE[s.face];
+  st.setProperty("--face", f[0]); st.setProperty("--fw", f[1]); st.setProperty("--fs", f[2] + "px");
+  word.style.fill = s.chrome > 0.02 ? "url(#chrome)" : s.ink;
+  /* the blue plate is the lockup's own hard offset copy; the offset the filter
+     needs is the difference between the two plates' positions */
+  const pdy = s.blueY - s.lockY + 6;
+  const plate = s.plate > 0.01 ? `drop-shadow(-7px ${pdy.toFixed(1)}px 0 rgba(43,58,143,${(0.92 * s.plate).toFixed(3)})) ` : "";
+  const g = s.bloom;
+  const depth = g > 0.02 ? `drop-shadow(0 0 ${3*g}px rgba(6,4,18,.98)) drop-shadow(0 0 ${14*g}px rgba(6,4,18,.85)) drop-shadow(0 0 ${26*g}px rgba(255,110,20,.6))` : "";
+  lockEl.style.filter = plate + depth;
 }
 
 /* ===========================================================================
-   1 · HOOK - the title, then the terminal it lives in
+   THE ENTRANCES — one per material. Everything in an act arrives this way.
    ========================================================================= */
-scene("hook", 0, L.brand1.start - 0.3, "What this is",
-  (el, s) => {
-    const t1 = E("div", "big", {}, 'A content studio<br>in your <span class="o">terminal</span>.');
-    const t2 = E("div", "lede", {}, "You use it by talking to it.");
-    el.append(t1, t2);
-    return { t1, t2 };
-  },
-  (r, t) => {
-    rise(r.t1, seg(t, 0.25, 1.15), 40);
-    rise(r.t2, seg(t, 0.95, 1.75), 24);
-    // a small settle: the title lifts as the sub arrives, so the pair reads as one move
-    const s = 1 - 0.06 * eio(seg(t, 3.9, 4.9));
-    r.t1.style.transform += ` scale(${s})`;
-  });
+const RISE = "power4.out";
+/* hand: written, left to right */
+function write(el, at, dur = 0.55) {
+  gsap.set(el, { clipPath: "inset(-12% 100% -12% -3%)" });
+  tl.to(el, { clipPath: "inset(-12% 0% -12% -3%)", duration: dur, ease: "power1.inOut" }, at);
+}
+/* neon: switched on — a CRT expanding from a bright line */
+function crtOn(el, at, dur = 0.34) {
+  gsap.set(el, { opacity: 0, scaleY: 0.006, scaleX: 1.04, transformOrigin: "50% 50%" });
+  tl.set(el, { opacity: 1, scaleY: 0.006, scaleX: 1.04, filter: "brightness(3.5)" }, at)
+    .to(el, { scaleY: 1, scaleX: 1, duration: dur, ease: "expo.out" }, at)
+    .to(el, { filter: "brightness(1)", duration: 0.45, ease: "power2.out" }, at + 0.05);
+}
+/* neon: switched off — collapses to a line, then to nothing */
+function crtOff(el, at) {
+  tl.to(el, { scaleY: 0.006, duration: 0.22, ease: "expo.in" }, at)
+    .to(el, { scaleX: 0, duration: 0.12, ease: "power3.in" }, at + 0.2)
+    .set(el, { opacity: 0 }, at + 0.33);
+}
+/* press: printed — a sheet is {el, plate, card}; the blue plate lands first */
+function sheet(w, h, css, fill) {
+  const el = E("div", "sheet", { width: w + "px", height: h + "px", opacity: 0, ...css });
+  const plate = E("div", "plate"), card = E("div", "card", { position: "absolute", inset: "0" });
+  if (fill) { fill(card); plate.innerHTML = card.innerHTML; }
+  el.append(plate, card);
+  return { el, plate, card };
+}
+function print(sh, at) {
+  gsap.set([sh.plate, sh.card], { y: -420 });
+  tl.set(sh.el, { opacity: 1 }, at)
+    .to(sh.plate, { y: 0, duration: 0.44, ease: "back.out(1.6)" }, at)
+    .to(sh.card,  { y: 0, duration: 0.44, ease: "back.out(1.6)" }, at + 0.14);
+}
+function pull(sh, at) {
+  tl.to(sh.plate, { y: -460, duration: 0.34, ease: "power3.in" }, at)
+    .to(sh.card,  { y: -460, duration: 0.36, ease: "power3.in" }, at + 0.06);
+}
+/* cel: cut — it is there, and for one frame it is blown out */
+function cut(el, at) {
+  gsap.set(el, { opacity: 0 });
+  tl.set(el, { opacity: 1, filter: "brightness(5)" }, at).set(el, { filter: "brightness(1)" }, at + 2 * F);
+}
+/* cel: slashed — a diagonal wipe, top-right to bottom-left */
+function slash(el, at, dur = 0.28) {
+  gsap.set(el, { clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, -60% 100%)" });
+  tl.set(el, { filter: "brightness(4)" }, at).set(el, { filter: "brightness(1)" }, at + F)
+    .to(el, { clipPath: "polygon(160% 0%, 100% 0%, 100% 100%, 100% 100%)", duration: dur, ease: "power3.in" }, at);
+}
+/* brand: the quiet rise the whole studio uses */
+function rise(el, at, dur = 0.6, dy = 26) {
+  gsap.set(el, { opacity: 0, y: dy });
+  tl.to(el, { opacity: 1, y: 0, duration: dur, ease: RISE }, at);
+}
+function leave(els, at) {
+  tl.to(els, { opacity: 0, y: -24, duration: 0.35, ease: "power2.in", stagger: 0.03 }, at);
+}
 
 /* ===========================================================================
-   2 · BRAND - the interview, then one file, then everything wearing it
+   SCENES. A scene is visible only inside its window; outside it the browser
+   does not paint it, which is what keeps a 2,600-frame render honest.
    ========================================================================= */
-scene("brand", L.brand1.start - 0.3, L.ask.start - 0.3, "Your brand, once",
+function scene(id, from, to, chapter, build, cues) {
+  const el = E("div", "scene");
+  scenesEl.appendChild(el);
+  const refs = build(el) || {};
+  tl.set(el, { visibility: "visible" }, from).set(el, { visibility: "hidden" }, to);
+  if (chapter) tl.set(S, { chapter }, from + 0.2);
+  cues(refs, el);
+}
+
+/* ---------------------------------------------------------------------------
+   ACT I · HAND — ink on paper. The brief, the interview, the one file.
+   --------------------------------------------------------------------------- */
+scene("hook", 0, L.brand1.start - 0.05, "what this is",
   (el) => {
-    const term = E("div", "term");
-    const bar = E("div", "bar", {}, "<i></i><i></i><i></i><span>/setup-brand</span>");
-    const body = E("div", "body");
-    const qa = [
+    const t1 = E("div", "big", {}, '<span class="l">A content studio</span><span class="l">in your <span class="o">terminal</span>.</span>');
+    const t2 = E("div", "lede", {}, "You use it by talking to it.");
+    el.append(t1, t2);
+    return { l: [...t1.querySelectorAll(".l")], t1, t2 };
+  },
+  (r) => {
+    write(r.l[0], 0.45, 0.9);
+    write(r.l[1], 1.25, 0.8);
+    write(r.t2, 2.35, 0.9);
+    tl.to([r.t1, r.t2], { y: -460, opacity: 0, duration: 0.5, ease: "power3.in", stagger: 0.05 }, L.brand1.start - 0.5);
+  });
+
+scene("brand", L.brand1.start - 0.3, L.ask.start + 0.35, "your brand, once",
+  (el) => {
+    const stack = E("div", "", { display: "grid", placeItems: "center", width: "100%", height: "100%" });
+    const term = E("div", "term", { gridArea: "1/1" });
+    term.append(E("div", "bar", {}, "<i></i><i></i><i></i><span>/setup-brand</span>"));
+    const body = E("div", "body"); term.appendChild(body);
+    const lines = [
       ['<span class="p">?</span>  What is your background colour', "#0a0e27"],
       ['<span class="p">?</span>  And your one accent', "#ff5100"],
       ['<span class="p">?</span>  How should the writing sound', "Precise. Never salesy."],
-    ];
-    const lines = qa.map(([q, a]) => {
-      const wrap = E("div", "", { opacity: 0 });
-      wrap.append(E("div", "ln ai", {}, q), E("div", "ln you", {}, "&nbsp;&nbsp;&nbsp;" + a));
-      body.appendChild(wrap);
-      return wrap;
+    ].map(([q, a]) => {
+      const w = E("div");
+      w.append(E("div", "ln ai", {}, q), E("div", "ln you", {}, "&nbsp;&nbsp;&nbsp;" + a));
+      body.appendChild(w); return w;
     });
-    term.append(bar, body);
-
-    const file = E("div", "card", {
-      position: "absolute", width: "780px", padding: "8px 38px", opacity: 0,
+    const file = E("div", "card", { gridArea: "1/1", width: "780px", padding: "8px 38px" });
+    file.appendChild(E("div", "mono", { fontSize: "22px", color: "var(--faint)", letterSpacing: ".06em", padding: "22px 0 8px" }, "brand-kit / brand.css"));
+    const toks = [["--bg", "#0a0e27", "#0a0e27"], ["--accent", "#ff5100", "#ff5100"], ["--sans", "Satoshi", null]].map(([k, v, sw]) => {
+      const row = E("div", "tokrow");
+      row.append(E("span", "k", {}, k), E("span", "v", {}, v), E("span", "sw", { background: sw || "transparent", borderColor: sw ? "var(--line)" : "transparent" }));
+      file.appendChild(row); return row;
     });
-    const head = E("div", "mono", {
-      fontSize: "20px", color: "var(--faint)", letterSpacing: ".14em",
-      textTransform: "uppercase", padding: "22px 0 8px",
-    }, "brand-kit / brand.css");
-    file.appendChild(head);
-    const toks = [
-      ["--bg", "#0a0e27", "#0a0e27"],
-      ["--accent", "#ff5100", "#ff5100"],
-      ["--sans", "Satoshi", null],
-    ].map(([k, v, sw]) => {
-      const row = E("div", "tokrow", { opacity: 0 });
-      row.append(
-        E("span", "k", {}, k),
-        E("span", "v", {}, v),
-        E("span", "sw", { background: sw || "transparent", borderColor: sw ? "var(--line)" : "transparent" })
-      );
-      file.appendChild(row);
-      return row;
-    });
-
-    // the surfaces that inherit it
-    const strip = E("div", "row", { position: "absolute", gap: "34px", opacity: 0 });
+    const strip = E("div", "row", { gridArea: "1/1", gap: "34px" });
     const tiles = ["post", "slide", "card", "video"].map((name) => {
       const tile = E("div", "tile", { width: "244px", height: "305px" });
-      tile.append(
-        E("i", "tl", { width: "94px", background: "var(--line)" }),
-        E("i", "tb", { top: "54px", width: "178px" }),
-        E("i", "tb", { top: "80px", width: "138px" }),
-        E("i", "tb", { top: "106px", width: "158px" }),
-        E("span", "tcap", {}, name)
-      );
-      strip.appendChild(tile);
-      return tile;
+      tile.append(E("i", "tl", { width: "94px", background: "var(--line)" }), E("i", "tb", { top: "54px", width: "178px" }),
+                  E("i", "tb", { top: "80px", width: "138px" }), E("i", "tb", { top: "106px", width: "158px" }), E("span", "tcap", {}, name));
+      strip.appendChild(tile); return tile;
     });
-    const el2 = E("div", "", { position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" });
-    el2.append(term, file, strip);
-    el.appendChild(el2);
-    return { term, lines, file, toks, strip, tiles };
+    stack.append(term, file, strip);
+    el.appendChild(stack);
+    return { term, lines, file, toks, tiles };
   },
-  (r, t) => {
+  (r) => {
     const A = L.brand1.start, B = L.brand2.start;
-    // the interview
-    const out = eio(seg(t, B + 0.4, B + 1.1));
-    r.term.style.opacity = eo(seg(t, A - 0.2, A + 0.4)) * (1 - out);
-    r.term.style.transform = `translateY(${(1 - eo(seg(t, A - 0.2, A + 0.4))) * 30}px) scale(${1 - 0.08 * out})`;
-    r.lines.forEach((ln, i) => {
-      const p = eo(seg(t, A + 0.5 + i * 1.35, A + 1.2 + i * 1.35));
-      ln.style.opacity = p;
-      ln.style.transform = `translateY(${(1 - p) * 16}px)`;
-    });
-    // the file it writes
-    const fin = eo(seg(t, B + 0.6, B + 1.3));
-    r.file.style.opacity = fin;
-    r.file.style.transform = `translateY(${lerp(40, 0, fin)}px)`;
+    /* the interview is written, one answer per question */
+    write(r.term, A - 0.15, 0.7);
+    r.lines.forEach((ln, i) => write(ln, A + 0.5 + i * 1.35, 0.7));
+    tl.to(r.term, { x: -1900, duration: 0.5, ease: "power3.in" }, B + 0.3);
+    /* "one file" — written 0.55s after she says it */
+    write(r.file, B + 0.55, 0.6);
     r.toks.forEach((row, i) => {
-      const p = eo(seg(t, B + 1.0 + i * 0.42, B + 1.5 + i * 0.42));
-      row.style.opacity = p;
-      row.style.transform = `translateX(${(1 - p) * -18}px)`;
+      write(row, B + 0.95 + i * 0.4, 0.45);
+      const sw = row.querySelector(".sw");
+      gsap.set(sw, { scale: 0 });
+      tl.to(sw, { scale: 1, duration: 0.35, ease: "back.out(2)" }, B + 1.2 + i * 0.4);
     });
-    // and everything that inherits it
-    const sin = seg(t, B + 3.0, B + 3.6);
-    r.file.style.opacity = fin * (1 - eio(sin));
-    r.strip.style.opacity = eo(sin);
+    /* "everything you make wears it" — the file gives way to the surfaces */
+    tl.to(r.file, { y: -520, opacity: 0, duration: 0.45, ease: "power3.in" }, B + 2.95);
+    gsap.set(r.tiles, { scale: 0.94, transformPerspective: 900, transformOrigin: "50% 50%" });
     r.tiles.forEach((tile, i) => {
-      const p = eo(seg(t, B + 3.1 + i * 0.16, B + 3.7 + i * 0.16));
-      tile.style.transform = `translateY(${(1 - p) * 26}px)`;
-      tile.style.opacity = p;
-      // the accent arrives on each tile as it lands
-      const c = seg(t, B + 3.5 + i * 0.16, B + 3.9 + i * 0.16);
-      tile.querySelector(".tl").style.background = c > 0.5 ? "var(--accent)" : "var(--line)";
-      tile.style.borderColor = c > 0.5 ? "var(--accent-line)" : "var(--line)";
+      const at = B + 3.15 + i * 0.16;
+      write(tile, at, 0.5);
+      tl.to(tile, { scale: 1, duration: 0.5, ease: RISE }, at)
+        .set(tile.querySelector(".tl"), { background: "var(--accent)" }, at + 0.5)
+        .set(tile, { borderColor: "var(--accent-line)" }, at + 0.5);
     });
+    /* T1 · "whatever the surface": the tiles turn over with the page and come
+       back as the next material. Same elements, new tokens. */
+    tl.to(r.tiles, { rotationY: 92, duration: 0.24, ease: "power2.in" }, T1 + 0.35)
+      .set(r.tiles, { rotationY: -92 }, T1 + 0.59)
+      .to(r.tiles, { rotationY: 0, duration: 0.34, ease: "back.out(1.7)", stagger: 0.05 }, T1 + 0.59)
+      .fromTo(r.tiles, { scale: 1.16 }, { scale: 1, duration: 0.5, ease: "expo.out" }, T1 + 0.91);
+    /* and then they sink into the floor as the prompt arrives */
+    tl.to(r.tiles, { y: 780, duration: 0.45, ease: "power3.in", stagger: 0.04 }, L.ask.start - 0.2);
   });
 
-/* ===========================================================================
-   3 · ASK - you type a sentence, three slides come back
-   ========================================================================= */
-scene("ask", L.ask.start - 0.3, L.iterate.start - 0.25, "Just ask",
+/* ---------------------------------------------------------------------------
+   ACT II · NEON — a CRT. You type, it switches things on.
+   --------------------------------------------------------------------------- */
+const MSG1 = "make a carousel about the new pricing", MSG2 = "make slide two about the free tier";
+let askTxt;
+scene("ask", L.ask.start - 0.2, T2 + 0.4, "just ask",
   (el) => {
     const prompt = E("div", "card", { padding: "26px 34px", width: "1200px", marginBottom: "62px" });
-    const txt = E("div", "ln you", { fontSize: "32px", lineHeight: "1.4" },
-      '<span class="p">&rsaquo;</span>  ');
-    prompt.appendChild(txt);
+    askTxt = E("div", "ln you", { fontSize: "32px", lineHeight: "1.4" }, '<span class="p">&rsaquo;</span>  ');
+    prompt.appendChild(askTxt);
     const row = E("div", "row", { gap: "34px" });
-    const slides = [0, 1, 2].map((i) => {
+    const slides = [0, 1, 2].map(() => {
       const sl = E("div", "card slide");
       sl.append(
-        E("i", "tl", { top: "28px", left: "28px", width: "78px" }),
+        E("i", "tl", { top: "28px", left: "28px", width: "78px", background: "var(--line)" }),
         E("i", "tb", { top: "78px", left: "28px", width: "0px", height: "16px", background: "var(--fg)" }),
         E("i", "tb", { top: "110px", left: "28px", width: "0px", height: "16px", background: "var(--fg)" }),
         E("i", "tb", { top: "160px", left: "28px", width: "0px" }),
         E("i", "tb", { top: "182px", left: "28px", width: "0px" }),
-        E("div", "card", { position: "absolute", left: "28px", right: "28px", bottom: "32px", height: "0px", background: "var(--panel-2)", overflow: "hidden" })
-      );
-      row.appendChild(sl);
-      return sl;
+        E("div", "card panel", { position: "absolute", left: "28px", right: "28px", bottom: "32px", height: "0px", background: "var(--panel-2)", overflow: "hidden" }));
+      row.appendChild(sl); return sl;
     });
-    el.append(prompt, row);
-    return { prompt, txt, row, slides };
+    const chip = E("div", "pill on", { marginTop: "44px" }, "re-rendered in 2.1s");
+    el.append(prompt, row, chip);
+    return { prompt, slides, chip };
   },
-  (r, t) => {
-    const A = L.ask.start, C = L.carousel.start;
-    rise(r.prompt, eo(seg(t, A - 0.2, A + 0.35)), 22);
-    // deterministic typing: characters revealed as a function of t
-    const msg = "make a carousel about the new pricing";
-    const n = Math.floor(cl(seg(t, A + 0.35, A + 2.5)) * msg.length);
-    const caret = t % 1 < 0.55 ? '<span class="cursor">&#9614;</span>' : "";
-    r.txt.innerHTML = '<span class="p">&rsaquo;</span>  ' + msg.slice(0, n) + (n < msg.length ? caret : "");
-    // slides build: frame, then headline bars, then the panel
+  (r) => {
+    const A = L.ask.start, C = L.carousel.start, I = L.iterate.start;
+    crtOn(r.prompt, A - 0.05);
+    /* typing is a NUMBER — how many characters are in — and post() writes it,
+       because the caret blink is a function of t, not a tween */
+    tl.fromTo(S, { type: 0 }, { type: 1, duration: 2.0, ease: "none" }, A + 0.3);
+    /* "builds the slides": each one switches on, then fills a beat later */
+    const w = [208, 164, 236, 186];
     r.slides.forEach((sl, i) => {
       const a = C + 0.5 + i * 0.55;
-      const p = eo(seg(t, a, a + 0.55));
-      sl.style.opacity = p;
-      sl.style.transform = `translateY(${(1 - p) * 34}px) scale(${lerp(0.94, 1, p)})`;
-      const bars = sl.querySelectorAll(".tb");
-      const w = [208, 164, 236, 186];
-      bars.forEach((b, j) => {
-        b.style.width = eo(seg(t, a + 0.35 + j * 0.13, a + 0.75 + j * 0.13)) * w[j] + "px";
-      });
-      const panel = sl.querySelector("div.card");
-      panel.style.height = eo(seg(t, a + 1.0, a + 1.45)) * 108 + "px";
-      sl.querySelector(".tl").style.background =
-        seg(t, a + 0.3, a + 0.5) > 0.5 ? "var(--accent)" : "var(--line)";
+      crtOn(sl, a);
+      tl.set(sl.querySelector(".tl"), { background: "var(--accent)" }, a + 0.4);
+      [...sl.querySelectorAll(".tb")].forEach((b, j) => tl.to(b, { width: w[j], duration: 0.4, ease: RISE }, a + 0.35 + j * 0.13));
+      tl.to(sl.querySelector(".panel"), { height: 108, duration: 0.45, ease: RISE }, a + 1.0);
     });
+    /* "slide two feels flat? say so" — the same prompt, a second message; the
+       slide is switched off and switched back on different */
+    const sel = r.slides[1], bars = [...sel.querySelectorAll(".tb")];
+    tl.set(S, { msg: 1 }, I - 0.02).fromTo(S, { type2: 0 }, { type2: 1, duration: 1.15, ease: "none" }, I + 0.05);
+    tl.set(sel, { className: "card slide sel" }, I + 1.3);
+    crtOff(sel, I + 1.5);
+    [244, 128, 186, 150].forEach((x, j) => tl.set(bars[j], { width: x }, I + 1.9));
+    crtOn(sel, I + 2.05);
+    crtOn(r.chip, I + 2.95, 0.3);
   });
 
-/* ===========================================================================
-   4 · ITERATE - change one, it re-renders
-   ========================================================================= */
-scene("iterate", L.iterate.start - 0.25, L.deck.start - 0.25, "Change anything",
-  (el) => {
-    const say = E("div", "card", { padding: "24px 32px", width: "1000px", marginBottom: "56px" });
-    say.appendChild(E("div", "ln you", { fontSize: "29px" },
-      '<span class="p">&rsaquo;</span>  make slide two about the free tier'));
-    const row = E("div", "row", { gap: "34px" });
-    const slides = [0, 1, 2].map((i) => {
-      const sl = E("div", "card slide");
-      sl.append(
-        E("i", "tl", { top: "28px", left: "28px", width: "78px" }),
-        E("i", "tb", { top: "78px", left: "28px", width: "208px", height: "16px", background: "var(--fg)" }),
-        E("i", "tb", { top: "110px", left: "28px", width: "164px", height: "16px", background: "var(--fg)" }),
-        E("i", "tb", { top: "160px", left: "28px", width: "236px" }),
-        E("div", "card", { position: "absolute", left: "28px", right: "28px", bottom: "32px", height: "108px", background: "var(--panel-2)" })
-      );
-      row.appendChild(sl);
-      return sl;
-    });
-    const chip = E("div", "pill on", { marginTop: "44px", opacity: 0 }, "re-rendered in 2.1s");
-    el.append(say, row, chip);
-    return { say, slides, chip };
-  },
-  (r, t) => {
-    const A = L.iterate.start;
-    rise(r.say, eo(seg(t, A - 0.15, A + 0.4)), 20);
-    r.slides.forEach((sl, i) => { sl.style.opacity = 1; });
-    const sel = r.slides[1];
-    // slide two gets picked, blanks, and comes back different
-    const pick = seg(t, A + 1.0, A + 1.35);
-    sel.classList.toggle("sel", pick > 0.5);
-    const blank = seg(t, A + 1.6, A + 2.0);
-    const back = seg(t, A + 2.2, A + 2.9);
-    const bars = sel.querySelectorAll(".tb");
-    const before = [208, 164, 236], after = [244, 128, 186];
-    bars.forEach((b, j) => {
-      const w = blank < 1 ? lerp(before[j], 0, eio(blank)) : lerp(0, after[j], eo(back));
-      b.style.width = w + "px";
-    });
-    sel.querySelector("div.card").style.opacity = 1 - eio(blank) + eo(back);
-    // a render sweep across the selected slide
-    const sw = seg(t, A + 2.15, A + 2.75);
-    sel.style.background = sw > 0 && sw < 1
-      ? `linear-gradient(100deg, var(--panel) ${sw * 100 - 18}%, var(--accent-soft) ${sw * 100}%, var(--panel) ${sw * 100 + 18}%)`
-      : "var(--panel)";
-    rise(r.chip, eo(seg(t, A + 2.9, A + 3.3)), 14);
-  });
+/* ---------------------------------------------------------------------------
+   ACT III · PRESS — a duplicator. Decks and long-form, printed in two plates.
+   --------------------------------------------------------------------------- */
+const slideFill = (c) => c.append(
+  E("i", "tl", { top: "20px", left: "20px", width: "50px" }),
+  E("i", "tb", { top: "48px", left: "20px", width: "158px", height: "11px", background: "var(--fg)" }),
+  E("i", "tb", { top: "70px", left: "20px", width: "112px" }));
 
-/* ===========================================================================
-   5 · DECK - seven slides, one PDF
-   ========================================================================= */
-scene("deck", L.deck.start - 0.25, L.video1.start - 0.25, "Decks",
+scene("deck", T2 + 0.25, L.essay.start + 0.35, "decks",
   (el) => {
     const holder = E("div", "", { position: "relative", width: "1180px", height: "460px" });
-    const slides = [];
+    const sheets = [];
     for (let i = 0; i < 7; i++) {
-      const sl = E("div", "card", {
-        position: "absolute", left: "50%", top: "90px", width: "304px", height: "172px",
-        marginLeft: "-152px", transformOrigin: "50% 120%",
-      });
-      sl.append(
-        E("i", "tl", { top: "20px", left: "20px", width: "50px" }),
-        E("i", "tb", { top: "48px", left: "20px", width: "158px", height: "11px", background: "var(--fg)" }),
-        E("i", "tb", { top: "70px", left: "20px", width: "112px" })
-      );
-      holder.appendChild(sl);
-      slides.push(sl);
+      const sh = sheet(304, 172, { position: "absolute", left: "50%", top: "90px", marginLeft: "-152px", transformOrigin: "50% 120%", zIndex: 10 - Math.abs(i - 3) }, slideFill);
+      holder.appendChild(sh.el); sheets.push(sh);
     }
-    const pdf = E("div", "card", {
-      position: "absolute", left: "50%", top: "110px", marginLeft: "-190px",
-      width: "380px", height: "252px", opacity: 0,
-      display: "flex", alignItems: "center", justifyContent: "center",
-      flexDirection: "column", gap: "14px", borderColor: "var(--accent-line)",
-      background: "var(--accent-soft)",
-    });
-    pdf.append(
-      E("div", "mono", { fontSize: "58px", color: "var(--accent)", fontWeight: "700" }, "PDF"),
-      E("div", "mono", { fontSize: "16px", color: "var(--muted)", letterSpacing: ".1em" }, "deck.pdf &middot; 7 slides")
-    );
-    holder.appendChild(pdf);
+    const stamp = E("div", "stamp", { left: "50%", top: "150px", marginLeft: "-230px", opacity: 0, zIndex: 20 }, "PDF &middot; 7 slides");
+    holder.appendChild(stamp);
     el.appendChild(holder);
-    return { slides, pdf };
+    return { holder, sheets, stamp };
   },
-  (r, t) => {
-    const A = L.deck.start;
-    const fan = eo(seg(t, A + 0.2, A + 1.5));
-    const collapse = eio(seg(t, A + 2.5, A + 3.4));
-    r.slides.forEach((sl, i) => {
-      const k = i - 3; // -3 .. 3
-      const ang = k * 5.5 * fan * (1 - collapse);
-      const x = k * 218 * fan * (1 - collapse);
-      const p = eo(seg(t, A + 0.2 + i * 0.09, A + 0.8 + i * 0.09));
-      sl.style.opacity = p * (1 - collapse * 0.85);
-      sl.style.transform =
-        `translateX(${x}px) translateY(${(1 - p) * 26}px) rotate(${ang}deg) scale(${lerp(0.9, 1, p) * (1 - 0.1 * collapse)})`;
-      sl.style.zIndex = 10 - Math.abs(k);
+  (r) => {
+    const P = L.print.start;
+    /* "seven slides": each is printed — blue plate, then orange — then they
+       fan out, then they collapse to one and the stamp lands on it */
+    r.sheets.forEach((sh, i) => {
+      const k = i - 3;
+      print(sh, P + 0.05 + i * 0.09);
+      tl.to(sh.el, { x: k * 218, rotation: k * 5.5, duration: 1.1, ease: RISE }, P + 1.0)
+        .to(sh.el, { x: 0, rotation: 0, scale: 0.9, opacity: 0.18, duration: 0.8, ease: "power2.inOut" }, P + 2.7);
     });
-    rise(r.pdf, eo(seg(t, A + 3.1, A + 3.8)), 22);
+    gsap.set(r.stamp, { scale: 1.9, rotation: -16 });
+    tl.to(r.stamp, { opacity: 1, scale: 1, rotation: -8, duration: 0.2, ease: "power3.in" }, P + 3.35);
+    /* fed out to the left as the next sheet comes through */
+    tl.to(r.holder, { x: -1700, duration: 0.5, ease: "power3.in" }, L.essay.start - 0.25);
   });
 
-/* ===========================================================================
-   6 · VIDEO - frames, then sound, from files
-   ========================================================================= */
-scene("video", L.video1.start - 0.25, L.essay.start - 0.25, "Video",
-  (el) => {
-    const title = E("div", "mono", {
-      fontSize: "17px", letterSpacing: ".2em", textTransform: "uppercase",
-      color: "var(--faint)", marginBottom: "26px",
-    }, "every frame is one screenshot");
-    const strip = E("div", "", { display: "flex", gap: "10px" });
-    strip.id = "strip";
-    const frames = [];
-    for (let i = 0; i < 9; i++) {
-      const fr = E("div", "fr");
-      fr.appendChild(E("b", "", { width: "22px", height: "22px", left: "20px", top: "48px" }));
-      strip.appendChild(fr);
-      frames.push(fr);
-    }
-    const cueTitle = E("div", "mono", {
-      fontSize: "17px", letterSpacing: ".2em", textTransform: "uppercase",
-      color: "var(--faint)", margin: "46px 0 22px",
-    }, "sound comes from a json file");
-    const bottom = E("div", "", { display: "flex", alignItems: "flex-end", gap: "54px" });
-    const cues = E("div", "card", { padding: "18px 26px", width: "430px" });
-    const cueLines = [
-      '{ "type": "whoosh", "t": 0.02 }',
-      '{ "type": "tone",   "t": 0.31 }',
-      '{ "type": "bell",   "t": 0.86 }',
-    ].map((c) => {
-      const d = E("div", "ln", { fontSize: "18px", lineHeight: "2.0", opacity: 0 }, c);
-      cues.appendChild(d);
-      return d;
-    });
-    const wave = E("div", "", { display: "flex", alignItems: "flex-end", gap: "5px", height: "96px" });
-    wave.id = "wave";
-    const bars = [];
-    for (let i = 0; i < 34; i++) { const b = E("i"); wave.appendChild(b); bars.push(b); }
-    bottom.append(cues, wave);
-    el.append(title, strip, cueTitle, bottom);
-    return { title, strip, frames, cueTitle, cues, cueLines, wave, bars };
-  },
-  (r, t) => {
-    const A = L.video1.start, B = L.video2.start;
-    rise(r.title, eo(seg(t, A - 0.1, A + 0.4)), 16);
-    r.frames.forEach((fr, i) => {
-      const p = eo(seg(t, A + 0.3 + i * 0.1, A + 0.8 + i * 0.1));
-      fr.style.opacity = p;
-      fr.style.transform = `translateY(${(1 - p) * 22}px)`;
-      // the dot inside each frame steps along - the same motion, sampled
-      const dot = fr.querySelector("b");
-      const q = i / 8;
-      dot.style.left = lerp(18, 78, q) + "px";
-      dot.style.top = lerp(70, 24, q) + "px";
-      dot.style.opacity = p;
-    });
-    // a playhead runs the strip
-    const ph = seg(t, B + 0.6, B + 3.2);
-    r.frames.forEach((fr, i) => {
-      const hot = Math.abs(ph * 8 - i) < 0.6 ? 1 : 0;
-      fr.style.borderColor = hot ? "var(--accent)" : "var(--line)";
-    });
-    rise(r.cueTitle, eo(seg(t, B + 2.6, B + 3.1)), 16);
-    r.cueLines.forEach((c, i) => {
-      const p = eo(seg(t, B + 3.0 + i * 0.4, B + 3.5 + i * 0.4));
-      c.style.opacity = p;
-      c.style.transform = `translateX(${(1 - p) * -14}px)`;
-    });
-    rise(r.cues, eo(seg(t, B + 2.8, B + 3.3)), 18);
-    const wp = seg(t, B + 3.4, B + 6.2);
-    r.wave.style.opacity = eo(seg(t, B + 3.3, B + 3.8));
-    r.bars.forEach((b, i) => {
-      const on = cl(wp * 34 - i);
-      // a fixed, readable envelope - deterministic, no randomness anywhere
-      const shape = 0.35 + 0.65 * Math.abs(Math.sin(i * 0.7) * Math.cos(i * 0.31));
-      b.style.height = 4 + on * shape * 88 + "px";
-      b.style.opacity = 0.35 + 0.65 * on;
-    });
-  });
-
-/* ===========================================================================
-   7 · ESSAY - one file in, the whole kit out
-   ========================================================================= */
-scene("essay", L.essay.start - 0.25, L.calendar.start - 0.25, "Long-form",
+scene("essay", L.essay.start - 0.2, T3 + 0.5, "long-form",
   (el) => {
     const wrap = E("div", "", { display: "flex", alignItems: "center", gap: "56px" });
-    const md = E("div", "card", { width: "372px", height: "470px", position: "relative", padding: "32px" });
-    md.appendChild(E("div", "mono", { fontSize: "15px", color: "var(--accent)", letterSpacing: ".12em" }, "post.md"));
-    for (let i = 0; i < 9; i++) {
-      md.appendChild(E("i", "tb", {
-        position: "relative", display: "block", marginTop: i === 0 ? "26px" : "13px",
-        left: "0", width: [200, 168, 214, 140, 196, 178, 150, 206, 120][i] + "px",
-      }));
-    }
+    const md = sheet(372, 470, {}, (c) => {
+      c.style.padding = "32px";
+      c.appendChild(E("div", "mono", { fontSize: "15px", color: "var(--accent)", letterSpacing: ".12em" }, "post.md"));
+      [200, 168, 214, 140, 196, 178, 150, 206, 120].forEach((w, i) =>
+        c.appendChild(E("i", "tb", { position: "relative", display: "block", marginTop: i === 0 ? "26px" : "13px", left: "0", width: w + "px" })));
+    });
     const arrow = E("div", "", { fontSize: "40px", color: "var(--faint)", opacity: 0 }, "&rarr;");
     const outs = E("div", "", { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "22px" });
-    const labels = ["article page", "hero image", "share card", "caption"];
-    const cards = labels.map((lab) => {
-      const c = E("div", "card", {
-        width: "330px", height: "218px", position: "relative", opacity: 0,
-        display: "flex", alignItems: "flex-end", padding: "18px",
+    const cards = ["article page", "hero image", "share card", "caption"].map((lab, i) => {
+      const sh = sheet(330, 218, {}, (c) => {
+        c.style.cssText += "display:flex;align-items:flex-end;padding:18px";
+        c.append(E("i", "tl", { top: "18px", left: "18px", width: "50px" }),
+                 E("i", "tb", { top: "44px", left: "18px", width: "150px", height: "11px", background: "var(--fg)" }),
+                 E("i", "tb", { top: "66px", left: "18px", width: "108px" }));
+        if (i === 1) c.appendChild(E("div", "halftone"));
+        c.appendChild(E("div", "mono", { fontSize: "13px", letterSpacing: ".14em", textTransform: "uppercase", color: "var(--faint)", position: "relative" }, lab));
       });
-      c.append(
-        E("i", "tl", { top: "18px", left: "18px", width: "50px" }),
-        E("i", "tb", { top: "44px", left: "18px", width: "150px", height: "11px", background: "var(--fg)" }),
-        E("i", "tb", { top: "66px", left: "18px", width: "108px" }),
-        E("div", "mono", { fontSize: "13px", letterSpacing: ".14em", textTransform: "uppercase", color: "var(--faint)" }, lab)
-      );
-      outs.appendChild(c);
-      return c;
+      outs.appendChild(sh.el); return sh;
     });
-    wrap.append(md, arrow, outs);
+    wrap.append(md.el, arrow, outs);
     el.appendChild(wrap);
     return { md, arrow, cards };
   },
-  (r, t) => {
+  (r) => {
     const A = L.essay.start;
-    rise(r.md, eo(seg(t, A - 0.1, A + 0.5)), 26);
-    r.arrow.style.opacity = eo(seg(t, A + 0.7, A + 1.1));
-    r.cards.forEach((c, i) => {
-      const p = eo(seg(t, A + 1.1 + i * 0.5, A + 1.75 + i * 0.5));
-      c.style.opacity = p;
-      c.style.transform = `translateY(${(1 - p) * 26}px) scale(${lerp(0.93, 1, p)})`;
-      c.style.borderColor = p > 0.8 ? "var(--accent-line)" : "var(--line)";
-    });
+    print(r.md, A + 0.05);
+    tl.to(r.arrow, { opacity: 1, duration: 0.3 }, A + 0.7);
+    /* "all in one go" — but one after another, or the eye cannot count them */
+    r.cards.forEach((sh, i) => print(sh, A + 1.05 + i * 0.45));
+    /* T3 · the sheets are pulled off the press */
+    pull(r.md, T3);
+    r.cards.forEach((sh, i) => pull(sh, T3 + 0.04 * i));
+    tl.to(r.arrow, { opacity: 0, duration: 0.2 }, T3);
   });
 
-/* ===========================================================================
-   8 · CALENDAR - say it shipped, the board updates
-   ========================================================================= */
-scene("calendar", L.calendar.start - 0.25, L.agnostic.start - 0.25, "The calendar",
+/* ---------------------------------------------------------------------------
+   ACT IV · CEL — a painted cel. Video: the act that explains this file.
+   --------------------------------------------------------------------------- */
+let vid;
+scene("video", L.video1.start + 0.2, T4 + 0.4, "video",
+  (el) => {
+    const stack = E("div", "", { display: "grid", placeItems: "center", width: "100%", height: "100%" });
+    /* part one: the filmstrip and the cue file */
+    const one = E("div", "", { gridArea: "1/1", display: "flex", flexDirection: "column", alignItems: "center" });
+    const title = E("div", "mono", { fontSize: "17px", letterSpacing: ".2em", textTransform: "uppercase", color: "var(--muted)", marginBottom: "26px" }, "every frame is one screenshot");
+    const strip = E("div"); strip.id = "strip";
+    const frames = [];
+    for (let i = 0; i < 9; i++) {
+      const fr = E("div", "fr"), q = i / 8;
+      /* each frame is a tiny cel: three flat bands and a sun a little further along */
+      fr.append(E("i", "", { top: "0", height: "58%", background: "#2b2b4e" }), E("i", "", { top: "58%", height: "24%", background: "#6b3a52" }),
+                E("i", "", { top: "82%", height: "18%", background: "#b8532c" }),
+                E("b", "", { width: "26px", height: "26px", left: lerp(14, 110, q) + "px", top: lerp(92, 30, q) + "px" }),
+                E("i", "", { top: "76%", height: "24%", background: "#080a12", clipPath: "polygon(0 100%, 30% 40%, 55% 70%, 80% 20%, 100% 100%)" }));
+      strip.appendChild(fr); frames.push(fr);
+    }
+    const cueTitle = E("div", "mono", { fontSize: "17px", letterSpacing: ".2em", textTransform: "uppercase", color: "var(--muted)", margin: "40px 0 20px" }, "the sound is a json file");
+    const bottom = E("div", "", { display: "flex", alignItems: "flex-end", gap: "54px" });
+    const cues = E("div", "card", { padding: "18px 26px", width: "520px" });
+    const cueLines = ['{ "type": "whoosh", "at": "video1 - 0.1" }', '{ "type": "chime",  "at": "video1 + 2.57" }', '{ "type": "tone",   "at": "video2 + 3.3" }']
+      .map((c) => { const d = E("div", "ln", { fontSize: "18px", lineHeight: "2.0" }, c); cues.appendChild(d); return d; });
+    const wave = E("div"); wave.id = "wave";
+    const bars = [];
+    for (let i = 0; i < 34; i++) { const b = E("i"); wave.appendChild(b); bars.push(b); }
+    bottom.append(cues, wave);
+    one.append(title, strip, cueTitle, bottom);
+
+    /* part two: THIS timeline. The lanes are real tweens from this file at
+       their real positions, and the playhead is where the film actually is. */
+    const two = E("div", "tlcard card", { gridArea: "1/1" });
+    two.appendChild(E("div", "mono tlhead", {}, "one paused timeline &middot; the renderer seeks it, one frame at a time"));
+    const ruler = E("div", "ruler");
+    for (let s = 0; s <= DUR; s += 10) {
+      const x = (4 + s / DUR * 90);
+      ruler.appendChild(E("i", "", { left: x + "%" }));
+      ruler.appendChild(E("span", "mono", { position: "absolute", left: x + "%", top: "-8px", fontSize: "12px", color: "var(--faint)", transform: "translateX(-50%)" }, s + "s"));
+    }
+    two.appendChild(ruler);
+    const LANES = [
+      [L.brand2.start + 0.55, 0.6,  "L.brand2.start + 0.55", "the file is written"],
+      [T2,                    0.4,  "L.print.start &minus; 0.45", "the screen switches off"],
+      [T3,                    0.85, "L.video1.start &minus; 0.1", "the sky arrives, one band at a time"],
+      [L.video3.start + 0.25, 0.4,  "L.video3.start + 0.25", "this diagram"],
+    ];
+    const lanes = LANES.map(([at, dur, lab, what]) => {
+      const lane = E("div", "lane");
+      const x = 4 + at / DUR * 90, w = dur / DUR * 90;
+      const tw = E("div", "tw", { left: x + "%", width: `max(${w}%, 14px)`, opacity: 0 });
+      const txt = E("div", "mono at", { left: `calc(${x}% + max(${w}%, 14px) + 14px)`, top: "20px", fontSize: "17px", opacity: 0 }, `tl.to(&hellip;, <b style="color:var(--fg)">${lab}</b>) &nbsp;&middot;&nbsp; ${what}`);
+      lane.append(tw, txt); two.appendChild(lane);
+      return { tw, txt };
+    });
+    const ph = E("div", "ph"); two.appendChild(ph);
+    const code = E("div", "mono code", {}, "");
+    two.appendChild(code);
+    const wrow = E("div", "wrow", { opacity: 0 });
+    const wsw = [["#f4efe4", "hand"], ["#14183a", "neon"], ["#f2ece0", "press"], ["#16243c", "cel"]].map(([c, n]) => {
+      const s = E("div", "wsw", { background: c, opacity: 0 }); wrow.appendChild(s); return s;
+    });
+    const wlab = E("span", "", { opacity: 0 }, "and the four materials you just watched &mdash; the same tweens, in this file");
+    wrow.appendChild(wlab); two.appendChild(wrow);
+    stack.append(one, two);
+    el.appendChild(stack);
+    vid = { one, title, frames, cueTitle, cues, cueLines, wave, bars, two, lanes, ph, code, wrow, wsw, wlab };
+    return vid;
+  },
+  (r, el) => {
+    const V2 = L.video2.start, V3 = L.video3.start, V4 = L.video4.start;
+    /* the cut opens the act; everything in it arrives on a cut */
+    cut(r.title, HIT + 0.06);
+    r.frames.forEach((fr, i) => cut(fr, V2 + 0.15 + i * 0.09));
+    tl.fromTo(S, { ph: 0 }, { ph: 1, duration: 2.2, ease: "none" }, V2 + 1.15);
+    cut(r.cueTitle, V2 + 3.3);
+    cut(r.cues, V2 + 3.45);
+    r.cueLines.forEach((c, i) => cut(c, V2 + 3.6 + i * 0.3));
+    cut(r.wave, V2 + 3.95);
+    tl.fromTo(S, { wp: 0 }, { wp: 1, duration: 2.4, ease: "none" }, V2 + 4.0);
+    /* "the motion is one paused timeline": part one is slashed, the diagram is cut in */
+    slash(r.one, V3 - 0.15);
+    cut(r.two, V3 + 0.25);
+    r.lanes.forEach((ln, i) => {
+      gsap.set(ln.tw, { scaleX: 0, transformOrigin: "0% 50%" });
+      tl.set(ln.tw, { opacity: 1 }, V3 + 0.7 + i * 0.3).to(ln.tw, { scaleX: 1, duration: 0.4, ease: "expo.out" }, V3 + 0.7 + i * 0.3);
+      cut(ln.txt, V3 + 0.95 + i * 0.3);
+    });
+    cut(r.ph, V3 + 2.0);
+    cut(r.code, V3 + 2.1);
+    /* "not even for what you just watched" */
+    cut(r.wrow, V4 + 1.9);
+    r.wsw.forEach((s, i) => cut(s, V4 + 2.0 + i * 0.12));
+    cut(r.wlab, V4 + 2.55);
+    /* T4 · the last cut takes the whole act with it */
+    slash(el, T4, 0.3);
+  });
+
+/* ---------------------------------------------------------------------------
+   ACT V · BRAND — the kit as shipped. The calendar, the model, the point.
+   --------------------------------------------------------------------------- */
+let calCount;
+scene("calendar", L.calendar.start - 0.15, L.agnostic.start - 0.1, "the calendar",
   (el) => {
     const say = E("div", "card", { padding: "18px 26px", width: "620px", marginBottom: "38px" });
     say.appendChild(E("div", "ln you", { fontSize: "23px" }, '<span class="p">&rsaquo;</span>  the pricing carousel went out'));
     const board = E("div", "card", { width: "1080px", padding: "12px 12px 22px" });
-    const items = [
-      ["Pricing carousel", "Mon"], ["Founder note", "Tue"],
-      ["Product video", "Wed"], ["Glossary card", "Thu"], ["Long read", "Fri"],
-    ];
-    const rows = items.map(([txt, day]) => {
-      const row = E("div", "crow");
-      const box = E("div", "box");
+    const rows = [["Pricing carousel", "Mon"], ["Founder note", "Tue"], ["Product video", "Wed"], ["Glossary card", "Thu"], ["Long read", "Fri"]].map(([txt, day]) => {
+      const row = E("div", "crow"), box = E("div", "box");
       box.appendChild(E("div", "tick", {}, "&#10003;"));
       row.append(box, E("div", "t", {}, txt), E("div", "d", {}, day));
-      board.appendChild(row);
-      return row;
+      board.appendChild(row); return row;
     });
     const barWrap = E("div", "", { width: "1040px", height: "6px", background: "var(--line-soft)", borderRadius: "3px", margin: "26px auto 0", overflow: "hidden" });
     const bar = E("i", "", { display: "block", height: "100%", width: "0", background: "var(--accent)" });
     barWrap.appendChild(bar);
-    const count = E("div", "mono", { fontSize: "20px", color: "var(--muted)", marginTop: "18px", letterSpacing: ".1em" }, "0 / 5 shipped");
-    el.append(say, board, barWrap, count);
-    return { say, board, rows, bar, count };
+    calCount = E("div", "mono", { fontSize: "20px", color: "var(--muted)", marginTop: "18px", letterSpacing: ".1em" }, "0 / 5 shipped");
+    el.append(say, board, barWrap, calCount);
+    return { say, board, rows, bar, barWrap };
   },
-  (r, t) => {
+  (r) => {
     const A = L.calendar.start;
-    rise(r.say, eo(seg(t, A - 0.15, A + 0.4)), 20);
-    rise(r.board, eo(seg(t, A + 0.2, A + 0.8)), 24);
-    let done = 0;
+    rise(r.say, A + 0.15, 0.55, 20);
+    rise(r.board, A + 0.4, 0.6, 24);
+    rise(r.barWrap, A + 0.9, 0.4, 10);
+    rise(calCount, A + 1.0, 0.4, 10);
+    /* "ticks itself": each row is a hard state change with a pulse on the box */
     r.rows.forEach((row, i) => {
-      const p = seg(t, A + 1.1 + i * 0.42, A + 1.45 + i * 0.42);
-      const box = row.querySelector(".box");
-      const on = p > 0.5;
-      if (on) done++;
-      box.style.background = on ? "var(--accent)" : "transparent";
-      box.style.borderColor = on ? "var(--accent)" : "var(--line)";
-      box.style.transform = `scale(${1 + 0.22 * Math.sin(Math.PI * cl(p))})`;
-      box.querySelector(".tick").style.opacity = on ? 1 : 0;
-      const label = row.querySelector(".t");
-      label.style.textDecoration = on ? "line-through" : "none";
-      label.style.color = on ? "var(--faint)" : "var(--muted)";
+      const at = A + 1.45 + i * 0.42, box = row.querySelector(".box"), lab = row.querySelector(".t");
+      tl.to(box, { scale: 1.22, duration: 0.17, ease: "sine.out" }, at - 0.17)
+        .set(box, { background: "var(--accent)", borderColor: "var(--accent)" }, at)
+        .set(box.querySelector(".tick"), { opacity: 1 }, at)
+        .set(lab, { textDecoration: "line-through", color: "var(--faint)" }, at)
+        .to(box, { scale: 1, duration: 0.17, ease: "sine.in" }, at)
+        .to(r.bar, { width: ((i + 1) / 5 * 100) + "%", duration: 0.25, ease: RISE }, at)
+        .set(S, { done: i + 1 }, at);
     });
-    r.bar.style.width = (done / 5) * 100 + "%";
-    r.count.textContent = done + " / 5 shipped";
-    r.count.style.opacity = eo(seg(t, A + 0.9, A + 1.3));
+    leave([r.say, r.board, r.barWrap, calCount], L.agnostic.start - 0.45);
   });
 
-/* ===========================================================================
-   9 · AGENT AGNOSTIC - it is files, so bring your own model
-   ========================================================================= */
-scene("agnostic", L.agnostic.start - 0.25, L.hour.start - 0.25, "Bring your own model",
+scene("agnostic", L.agnostic.start - 0.15, L.hour.start - 0.1, "bring your own model",
   (el) => {
     const chips = E("div", "row", { gap: "20px", marginBottom: "56px" });
-    const models = ["Claude", "GPT", "Gemini", "Llama", "whatever is next"].map((m) => {
-      const c = E("div", "pill", { opacity: 0, fontSize: "19px" }, m);
-      chips.appendChild(c);
-      return c;
-    });
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("viewBox", "0 0 900 130");
+    const models = ["Claude", "GPT", "Gemini", "Llama", "whatever is next"].map((m) => { const c = E("div", "pill", { fontSize: "19px" }, m); chips.appendChild(c); return c; });
+    const svg = SVG("svg", { viewBox: "0 0 900 130" });
     Object.assign(svg.style, { width: "900px", height: "130px", display: "block" });
     const paths = [];
     for (let i = 0; i < 5; i++) {
       const x = 90 + i * 180;
-      const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      p.setAttribute("d", `M ${x} 4 C ${x} 70, 450 60, 450 124`);
-      p.setAttribute("stroke", "var(--accent)");
-      p.setAttribute("stroke-width", "2");
-      p.setAttribute("fill", "none");
-      svg.appendChild(p);
-      paths.push(p);
+      const p = SVG("path", { d: `M ${x} 4 C ${x} 70, 450 60, 450 124`, stroke: "var(--accent)", "stroke-width": "2", fill: "none", "stroke-dasharray": 150, "stroke-dashoffset": 150, opacity: 0.25 });
+      svg.appendChild(p); paths.push(p);
     }
-    const folder = E("div", "card", {
-      padding: "26px 40px", borderColor: "var(--accent-line)", background: "var(--accent-soft)",
-      display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", opacity: 0,
-    });
-    folder.append(
-      E("div", "mono", { fontSize: "26px", color: "var(--accent)" }, ".claude / skills"),
-      E("div", "mono", { fontSize: "16px", color: "var(--muted)", letterSpacing: ".08em" }, "plain markdown instructions")
-    );
-    const note = E("div", "lede", { marginTop: "40px", opacity: 0 }, "No lock-in. It is a folder of files, in your git repo.");
+    const folder = E("div", "card", { padding: "26px 40px", borderColor: "var(--accent-line)", background: "var(--accent-soft)", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" });
+    folder.append(E("div", "mono", { fontSize: "26px", color: "var(--accent)" }, ".claude / skills"), E("div", "mono", { fontSize: "16px", color: "var(--muted)", letterSpacing: ".08em" }, "plain markdown instructions"));
+    const note = E("div", "lede", { marginTop: "40px" }, "No lock-in. It is a folder of files, in your git repo.");
     el.append(chips, svg, folder, note);
     return { models, paths, folder, note, svg };
   },
-  (r, t) => {
+  (r) => {
     const A = L.agnostic.start;
-    r.models.forEach((c, i) => {
-      const p = eo(seg(t, A + 0.2 + i * 0.28, A + 0.75 + i * 0.28));
-      c.style.opacity = p;
-      c.style.transform = `translateY(${(1 - p) * -22}px)`;
-      if (i === 4) c.classList.toggle("on", p > 0.9);
-    });
-    r.paths.forEach((p, i) => {
-      const len = 150;
-      const d = eo(seg(t, A + 1.5 + i * 0.16, A + 2.3 + i * 0.16));
-      p.setAttribute("stroke-dasharray", len);
-      p.setAttribute("stroke-dashoffset", (1 - d) * len);
-      p.setAttribute("opacity", 0.25 + 0.55 * d);
-    });
-    r.svg.style.opacity = eo(seg(t, A + 1.4, A + 1.8));
-    rise(r.folder, eo(seg(t, A + 2.4, A + 3.0)), 22);
-    rise(r.note, eo(seg(t, A + 4.6, A + 5.2)), 18);
+    r.models.forEach((c, i) => { gsap.set(c, { opacity: 0, y: -22 }); tl.to(c, { opacity: 1, y: 0, duration: 0.55, ease: RISE }, A + 0.2 + i * 0.28); });
+    tl.set(r.models[4], { className: "pill on" }, A + 1.85);
+    gsap.set(r.svg, { opacity: 0 });
+    tl.to(r.svg, { opacity: 1, duration: 0.4 }, A + 1.4);
+    /* "point whichever model at it": each line draws itself down to the folder */
+    r.paths.forEach((p, i) => tl.to(p, { attr: { "stroke-dashoffset": 0, opacity: 0.8 }, duration: 0.8, ease: RISE }, A + 1.5 + i * 0.16));
+    rise(r.folder, A + 2.4, 0.6, 22);
+    rise(r.note, A + 4.6, 0.6, 18);
+    leave([r.models, r.svg, r.folder, r.note].flat(), L.hour.start - 0.45);
   });
 
-/* ===========================================================================
-   10 · THE HOUR - a Monday, and the week that comes out of it
-   ========================================================================= */
-scene("hour", L.hour.start - 0.25, L.close.start - 0.25, "The point",
+scene("hour", L.hour.start - 0.15, L.close.start - 0.1, "the point",
   (el) => {
     const wrap = E("div", "", { display: "flex", alignItems: "center", gap: "80px" });
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("viewBox", "0 0 100 100");
+    const svg = SVG("svg", { viewBox: "0 0 100 100" });
     Object.assign(svg.style, { width: "268px", height: "268px" });
-    const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    ring.setAttribute("cx", 50); ring.setAttribute("cy", 50); ring.setAttribute("r", 44);
-    ring.setAttribute("stroke", "var(--line)"); ring.setAttribute("stroke-width", 6); ring.setAttribute("fill", "none");
-    const arc = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    arc.setAttribute("cx", 50); arc.setAttribute("cy", 50); arc.setAttribute("r", 44);
-    arc.setAttribute("stroke", "var(--accent)"); arc.setAttribute("stroke-width", 6);
-    arc.setAttribute("fill", "none"); arc.setAttribute("stroke-linecap", "round");
-    arc.setAttribute("transform", "rotate(-90 50 50)");
-    svg.append(ring, arc);
+    const C = 2 * Math.PI * 44;
+    svg.append(SVG("circle", { cx: 50, cy: 50, r: 44, stroke: "var(--line)", "stroke-width": 6, fill: "none" }),
+               SVG("circle", { cx: 50, cy: 50, r: 44, stroke: "var(--accent)", "stroke-width": 6, fill: "none", "stroke-linecap": "round", transform: "rotate(-90 50 50)", "stroke-dasharray": C, "stroke-dashoffset": C }));
+    const arc = svg.lastChild;
     const left = E("div", "", { display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" });
-    const lab = E("div", "mono", { fontSize: "17px", letterSpacing: ".18em", textTransform: "uppercase", color: "var(--faint)" }, "one hour, monday");
-    left.append(svg, lab);
+    left.append(svg, E("div", "mono", { fontSize: "17px", letterSpacing: ".18em", textTransform: "uppercase", color: "var(--faint)" }, "one hour, monday"));
     const week = E("div", "", { display: "flex", gap: "18px" });
     const days = ["Mon", "Tue", "Wed", "Thu", "Fri"].map((d) => {
-      const c = E("div", "card", { width: "190px", height: "248px", position: "relative", opacity: 0 });
-      c.append(
-        E("i", "tl", { top: "20px", left: "18px", width: "56px" }),
-        E("i", "tb", { top: "54px", left: "18px", width: "142px", height: "13px", background: "var(--fg)" }),
-        E("i", "tb", { top: "78px", left: "18px", width: "108px" }),
-        E("span", "tcap", { bottom: "12px", color: "var(--muted)" }, d)
-      );
-      week.appendChild(c);
-      return c;
+      const c = E("div", "card", { width: "190px", height: "248px" });
+      c.append(E("i", "tl", { top: "20px", left: "18px", width: "56px" }), E("i", "tb", { top: "54px", left: "18px", width: "142px", height: "13px", background: "var(--fg)" }),
+               E("i", "tb", { top: "78px", left: "18px", width: "108px" }), E("span", "tcap", { bottom: "12px", color: "var(--muted)" }, d));
+      week.appendChild(c); return c;
     });
     wrap.append(left, week);
     el.appendChild(wrap);
-    return { arc, left, days, lab };
+    return { arc, left, days };
   },
-  (r, t) => {
+  (r) => {
     const A = L.hour.start;
-    rise(r.left, eo(seg(t, A - 0.15, A + 0.4)), 20);
-    const C = 2 * Math.PI * 44;
-    const sweep = eio(seg(t, A + 0.2, A + 2.0));
-    r.arc.setAttribute("stroke-dasharray", C);
-    r.arc.setAttribute("stroke-dashoffset", C * (1 - sweep));
+    rise(r.left, A - 0.05, 0.55, 20);
+    tl.to(r.arc, { attr: { "stroke-dashoffset": 0 }, duration: 1.8, ease: "power2.inOut" }, A + 0.2);
     r.days.forEach((c, i) => {
-      const p = eo(seg(t, A + 0.7 + i * 0.24, A + 1.25 + i * 0.24));
-      c.style.opacity = p;
-      c.style.transform = `translateY(${(1 - p) * 30}px) scale(${lerp(0.92, 1, p)})`;
-      c.style.borderColor = p > 0.85 ? "var(--accent-line)" : "var(--line)";
+      gsap.set(c, { opacity: 0, y: 30, scale: 0.92 });
+      tl.to(c, { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: RISE }, A + 0.7 + i * 0.24)
+        .set(c, { borderColor: "var(--accent-line)" }, A + 1.17 + i * 0.24);
     });
+    leave([r.left, ...r.days], L.close.start - 0.45);
   });
 
-/* ===========================================================================
-   11 · CLOSE
-   ========================================================================= */
-scene("close", L.close.start - 0.25, T.total + 0.25, "Open source",
+scene("close", L.close.start - 0.15, DUR + 1, "open source",
   (el) => {
     const t1 = E("div", "big", {}, 'Open source.<br>Yours in <span class="o">five minutes</span>.');
     const chips = E("div", "row", { gap: "16px", marginTop: "40px" });
-    ["MIT licensed", "no account", "nothing hosted"].map((c) =>
-      chips.appendChild(E("div", "pill", { opacity: 0 }, c)));
+    ["MIT licensed", "no account", "nothing hosted"].forEach((c) => chips.appendChild(E("div", "pill", {}, c)));
     el.append(t1, chips);
     return { t1, chips: [...chips.children] };
   },
-  (r, t) => {
+  (r) => {
     const A = L.close.start;
-    rise(r.t1, eo(seg(t, A - 0.2, A + 0.5)), 34);
-    r.chips.forEach((c, i) => {
-      const p = eo(seg(t, A + 0.8 + i * 0.22, A + 1.3 + i * 0.22));
-      c.style.opacity = p;
-      c.style.transform = `translateY(${(1 - p) * 18}px)`;
-    });
+    rise(r.t1, A - 0.05, 0.7, 34);
+    r.chips.forEach((c, i) => rise(c, A + 0.8 + i * 0.22, 0.5, 18));
+    /* the story ends on bare navy; the ender opens on the same navy and lands
+       the mark. Feeds freeze on the ender's last frame, not on this one. */
+    tl.to([scenesEl, hdrEl, progEl, subEl], { opacity: 0, duration: 0.45, ease: "power2.inOut" }, L.close.end + 0.25);
   });
 
 /* ===========================================================================
-   12 · SIGN-OFF - the mark lands, and the frame is held.
-   Feeds freeze on the last frame, so it has to be the full brand, fully
-   visible. Nothing goes after this.
+   THE JOINS — the film's transitions, on the ground and the header. The
+   content's part of each join is in the scene it belongs to, above.
    ========================================================================= */
-scene("signoff", T.total + 0.25, DUR + 1, "",
-  (el) => {
-    const lock = E("div", "logo-lockup", { fontSize: "152px", opacity: 0 });
-    lock.appendChild(E("span", "wordmark", {}, "swel"));
-    const wrap = E("div", "", { display: "flex", flexDirection: "column", alignItems: "center", gap: "34px" });
-    const motto = E("div", "", {
-      fontFamily: "var(--sans)", fontWeight: "700", fontSize: "46px",
-      letterSpacing: "-0.02em", opacity: 0,
-    }, '<span style="color:var(--accent)">Content infrastructure</span> <span style="color:var(--fg)">in motion.</span>');
-    const url = E("div", "mono", { fontSize: "26px", color: "var(--muted)", letterSpacing: ".08em", opacity: 0 }, "github.com/swelv-lab/studio");
-    wrap.append(lock, motto, url);
-    el.appendChild(wrap);
-    return { lock, motto, url };
-  },
-  (r, t) => {
-    const A = T.total + 0.3;
-    // the mark drops in rather than drawing itself
-    const d = eo(seg(t, A, A + 0.7));
-    r.lock.style.opacity = d;
-    r.lock.style.transform = `translateY(${(1 - d) * -46}px)`;
-    rise(r.motto, eo(seg(t, A + 0.75, A + 1.35)), 20);
-    rise(r.url, eo(seg(t, A + 1.25, A + 1.8)), 16);
-  });
+const NEON = [sky, sun, hz, floor, scan, bloom];
+gsap.set(sky,   { clipPath: "inset(100% 0 0 0)", transformOrigin: "50% 540px" });
+gsap.set(sun,   { transformOrigin: "50% 390px" });
+gsap.set(hz,    { transformOrigin: "50% -108px" });
+gsap.set(floor, { transformOrigin: "50% -111px" });
+gsap.set(scan,  { transformOrigin: "50% 50%" });
+gsap.set(bloom, { transformOrigin: "50% 340px" });
+gsap.set(scenesEl, { transformOrigin: "50% 50%" });
+gsap.set(hdrEl, { transformOrigin: "50% 504px" });
+gsap.set(subEl, { transformOrigin: "50% -395px" });
+gsap.set(progEl, { transformOrigin: "50% -486px" });
+gsap.set(brandlock, { transformPerspective: 900, transformOrigin: "118px 50%" });
+gsap.set(bands, { xPercent: (i) => (i % 2 ? 100 : -100) });
+gsap.set(celSvg, { y: 760 }); gsap.set(celSun, { y: -1250 });
+gsap.set([$("kitlock"), $("kitqual")], { opacity: 0, y: 18 });
+
+/* T1 · HAND → NEON — the sunset rises up over the paper; the page turns over
+   like a card and comes back as chrome; the V morphs the whole way. */
+tl.to(cur, { ...NEON_C, duration: 0.9, ease: "power2.inOut" }, T1)
+  .set(cur, { sky: 1 }, T1)
+  .to(sky, { clipPath: "inset(0% 0 0 0)", duration: 0.85, ease: "expo.out" }, T1)
+  .to(cur, { sunY: 1, duration: 0.90, ease: "expo.out" }, T1 + 0.07)
+  .to(cur, { grid: 1, duration: 0.45, ease: "power2.out" }, T1 + 0.20)
+  .to(cur, { vm: 1, wob: 0, duration: 0.55, ease: "power2.inOut" }, T1 + 0.33)
+  .to(brandlock, { rotationY: 92, duration: 0.24, ease: "power2.in" }, T1 + 0.35)
+  .set(cur, { face: "neon", handop: 0, wordop: 1, vop: 1 }, T1 + 0.59)
+  .set(brandlock, { rotationY: -92 }, T1 + 0.59)
+  .to(brandlock, { rotationY: 0, duration: 0.34, ease: "back.out(1.7)" }, T1 + 0.59)
+  .to(cur, { chrome: 1, duration: 0.45, ease: "power2.out" }, T1 + 0.59)
+  .to(cur, { scan: 1, bloom: 1, duration: 0.40 }, T1 + 0.67)
+  .fromTo(brandlock, { scale: 1.30 }, { scale: 1, duration: 0.52, ease: "expo.out" }, T1 + 0.91);
+world("neon", T1 + 0.59);
+
+/* T2 · NEON → PRESS — the machine is switched off: the whole screen collapses
+   to a line, then a dot. The press runs: the blue plate drops and lands, the
+   orange lands a beat later, slightly off; the halftone prints in from the foot. */
+const COLLAPSE = [...NEON, scenesEl, hdrEl, subEl, progEl];
+tl.to(COLLAPSE, { scaleY: 0.006, duration: 0.26, ease: "expo.in" }, T2)
+  .to(crt, { opacity: 1, duration: 0.05 }, T2 + 0.21)
+  .to(COLLAPSE, { scaleX: 0, duration: 0.14, ease: "power3.in" }, T2 + 0.26)
+  .to(crt, { scaleX: 0, opacity: 0, duration: 0.16, ease: "power3.in" }, T2 + 0.27)
+  .to(cur, { ...PRESS_C, duration: 0.20, ease: "power2.out" }, T2 + 0.39)
+  .set(cur, { sky: 0, grid: 0, scan: 0, bloom: 0, chrome: 0, sunY: 0, face: "press" }, T2 + 0.43)
+  .set(COLLAPSE, { scaleX: 1, scaleY: 1 }, T2 + 0.45)
+  .set(brandlock, { rotationY: 0, scale: 1 }, T2 + 0.45)
+  .set(cur, { lockY: -340, blueY: -340, plate: 1 }, T2 + 0.45)
+  .to(cur, { blueY: 0, duration: 0.44, ease: "back.out(1.6)" }, T2 + 0.59)
+  .to(cur, { lockY: 0, duration: 0.44, ease: "back.out(1.6)" }, T2 + 0.73)
+  .set(cur, { dots: 1 }, T2 + 0.85)
+  .to(cur, { dotsIn: 1, duration: 0.62, ease: "power2.out" }, T2 + 0.85);
+world("press", T2 + 0.43);
+
+/* T3 · PRESS → CEL — the sheet is pulled off the press; the painted sky
+   arrives one band at a time, top to bottom, alternating sides; the land comes
+   up, the sun drops in, the mountain rises; then the cut. */
+tl.to(cur, { blueY: -360, duration: 0.34, ease: "power3.in" }, T3)
+  .to(cur, { lockY: -360, duration: 0.36, ease: "power3.in" }, T3 + 0.06)
+  .to(qual, { y: -380, duration: 0.36, ease: "power3.in" }, T3 + 0.06)
+  .to(cur, { dotsIn: 0, duration: 0.42, ease: "power2.in" }, T3 + 0.06)
+  .set(cur, { plate: 0, wordop: 0, vop: 0, dots: 0 }, T3 + 0.44)
+  .set(cur, { mtn: 1 }, T3 + 0.15)
+  .to(cur, { bg: CEL_C.bg, duration: 0.15 }, T3 + 0.15)
+  .to(bands, { xPercent: 0, duration: 0.46, ease: "expo.out", stagger: 0.075 }, T3 + 0.15)
+  .to(celSvg, { y: 0, duration: 0.62, ease: "expo.out" }, T3 + 0.56)
+  .to(celSun, { y: 0, duration: 0.55, ease: "back.out(1.3)" }, T3 + 0.68)
+  .set(qual, { y: 0, opacity: 0 }, T3 + 0.5)
+  .set(cur, { ...CEL_C, face: "cel", wordop: 1, vop: 1, lockY: 0, blueY: 0 }, HIT)
+  .set(qual, { opacity: 1 }, HIT);
+world("cel", T3 + 0.56);          /* after the last pulled sheet has left the frame */
+const CEL_RISE = [T3 + 0.95, T3 + 1.70];
+
+/* T4 · CEL → BRAND — the bands leave the way they came, bottom first; the
+   lockup shrinks to nothing and the brand kit's own comes up in its place. */
+tl.to(bands, { xPercent: (i) => (i % 2 ? 100 : -100), duration: 0.42, ease: "power3.in", stagger: { each: 0.06, from: "end" } }, T4 + 0.05)
+  .to(celSun, { y: 560, duration: 0.40, ease: "power3.in" }, T4 + 0.10)
+  .to(celSvg, { y: 420, duration: 0.45, ease: "power3.in" }, T4 + 0.15)
+  .to(brandlock, { scale: 0, duration: 0.42, ease: "power3.in" }, T4 + 0.20)
+  .to(cur, { bg: NAVY, duration: 0.5 }, T4 + 0.10)
+  .set(cur, { mtn: 0, wordop: 0, vop: 0 }, T4 + 0.62)
+  .set(brandlock, { opacity: 0 }, T4 + 0.64);
+world("brand", T4 + 0.55);
+rise($("kitlock"), L.calendar.start - 0.05, 0.6, 18);
+rise($("kitqual"), L.calendar.start + 0.05, 0.5, 14);
 
 /* ===========================================================================
-   The frame
+   post(t) — what is a function of t rather than a tween, and the chrome.
    ========================================================================= */
-const subEl = document.getElementById("sub");
-const chapEl = document.getElementById("chapter");
-const progEl = document.querySelector("#prog i");
-const lineList = Object.entries(L);
-
-window.renderFrame = function (t01) {
-  const t = cl(t01, 0, 1) * DUR;
-
-  // scenes cross-fade; only the active pair is painted
-  let chapter = "";
-  scenes.forEach((s) => {
-    const fin = seg(t, s.from, s.from + 0.4);
-    const fout = 1 - seg(t, s.to - 0.32, s.to);
-    const vis = cl(Math.min(fin, fout));
-    s.el.style.opacity = vis;
-    s.el.style.transform = `scale(${lerp(0.985, 1, eo(vis))})`;
-    s.el.style.pointerEvents = "none";
-    if (vis > 0.5 && s.chapter) chapter = s.chapter;
-    if (vis > 0.001) s.draw(s.refs, t);
+const lineList = Object.values(L);
+const PEN = { write: [0.35, 2.15], vDraw: [2.15, 2.62], under: [2.55, 2.88], qual: [2.75, 3.35] };
+function post(t) {
+  /* the header: the pen writes the lockup, then draws the V, then underlines */
+  const wp = lin(t, PEN.write[0], PEN.write[1]);
+  wmPaths.forEach((p, i) => {
+    const a = i / wmPaths.length, b = (i + 1) / wmPaths.length, q = eoq(cl((wp - a) / (b - a)));
+    if (!p._L) p._L = p.getTotalLength();
+    p.style.strokeDasharray = p._L; p.style.strokeDashoffset = p._L * (1 - q);
   });
+  const vp = eoq(lin(t, PEN.vDraw[0], PEN.vDraw[1])), sp = eoq(lin(t, PEN.vDraw[0] + 0.35, PEN.vDraw[1] + 0.25));
+  [[hcrest, vp], [hswell, sp]].forEach(([el, q]) => { const l = el.getTotalLength(); el.style.strokeDasharray = l; el.style.strokeDashoffset = l * (1 - q); });
+  { const l = hunder.getTotalLength(), q = eio(lin(t, PEN.under[0], PEN.under[1])); hunder.style.strokeDasharray = l; hunder.style.strokeDashoffset = l * (1 - q); }
+  qual.style.clipPath = t < T1 ? `inset(-25% ${(1 - eio(lin(t, PEN.qual[0], PEN.qual[1]))) * 100}% -25% -5%)` : "none";
 
-  chapEl.textContent = chapter;
-  chapEl.style.opacity = chapter ? 1 : 0;
+  /* the attract screen: the floor scrolls at you, the chrome runs, the scanlines roll */
+  const fp = (t - T1) * 0.95, NHZ = neon.NHZ;
+  neon.lines.forEach((l, i) => {
+    const u = (((i + fp) % NHZ) + NHZ) % NHZ / NHZ, y = 429 * Math.pow(u, 2.4);
+    l.setAttribute("y1", y); l.setAttribute("y2", y); l.setAttribute("opacity", (0.9 * Math.min(1, u * 5)).toFixed(3));
+  });
+  flash.style.opacity = (0.30 * Math.pow(1 - lin(t, T1 + 1.05, T1 + 1.25), 3)).toFixed(3);
+  $("chrome").setAttribute("gradientTransform", `translate(0 ${(0.085 * Math.sin((t - T1) * 2.1)).toFixed(4)})`);
+  scan.style.backgroundPosition = `0 ${((t * 46) % 4).toFixed(2)}px`;
 
-  // subtitles: the line being spoken, faded at its edges
+  /* the press: the dots swell in a wave that travels across the sheet */
+  { const dr = 1 + 0.30 * Math.sin(t * 2.3) + 0.10 * Math.sin(t * 5.1), visRows = DOT.rows * cur.dotsIn;
+    for (let r = 0; r < DOT.rows; r++) {
+      const on = r >= DOT.rows - visRows, base = 4.4 * Math.pow((r + 1) / DOT.rows, 0.9);
+      for (let c = 0; c < DOT.cols; c++) {
+        const e = DOT.els[r * DOT.cols + c];
+        if (!on || cur.dots < 0.01) { e.setAttribute("r", 0); continue; }
+        e.setAttribute("r", (base * (0.70 + 0.30 * Math.sin(c * DOT.pitch * 0.017 - t * 7.2 + r * 0.42) * dr)).toFixed(2));
+      }
+    } }
+
+  /* the cel: the flock, the rise, the two cuts */
+  yoteiUpdate(lin(t, L.video2.start + 0.2, L.video3.end), t, eoq(lin(t, CEL_RISE[0], CEL_RISE[1])));
+  celFlash.style.opacity = ((t >= HIT && t < HIT + 2 * F) || (t >= T4 && t < T4 + 2 * F)) ? 0.92 : 0;
+  const ru = lin(t, HIT + F, HIT + 0.62);
+  ring.style.transform = `scale(${(0.30 + eoq(ru) * 6.2).toFixed(3)})`;
+  ring.style.borderWidth = (11 - 8.5 * ru).toFixed(1) + "px";
+  ring.style.opacity = (ru > 0 && ru < 1 ? (1 - ru) * 0.85 : 0).toFixed(3);
+
+  /* the typed prompt: the character count is tweened; the caret blinks on t */
+  const msg = S.msg ? MSG2 : MSG1, n = Math.floor((S.msg ? S.type2 : S.type) * msg.length);
+  const caret = t % 1 < 0.55 ? '<span class="cursor">&#9614;</span>' : "";
+  askTxt.innerHTML = '<span class="p">&rsaquo;</span>  ' + msg.slice(0, n) + (n < msg.length ? caret : "");
+
+  /* the filmstrip's playhead, the wave's envelope */
+  vid.frames.forEach((fr, i) => { fr.style.borderColor = S.ph > 0 && S.ph < 1 && Math.abs(S.ph * 8 - i) < 0.6 ? "var(--accent)" : "var(--line)"; });
+  vid.bars.forEach((b, i) => {
+    const on = cl(S.wp * 34 - i), shape = 0.35 + 0.65 * Math.abs(Math.sin(i * 0.7) * Math.cos(i * 0.31));
+    b.style.height = 4 + on * shape * 88 + "px"; b.style.opacity = 0.35 + 0.65 * on;
+  });
+  /* the diagram's playhead is where THIS film is — quantised to a frame,
+     because that is what the renderer does to this file */
+  const fr = Math.floor(t * FPS + 1e-6);
+  vid.ph.style.left = (4 + (fr / FPS) / DUR * 90) + "%";
+  vid.code.innerHTML = `window.renderFrame(${(fr / TOTAL_FRAMES).toFixed(4)}) &nbsp;&rarr;&nbsp; tl.seek(${(fr / FPS).toFixed(2)}) &nbsp;&middot;&nbsp; <span class="o">frame ${String(fr).padStart(4, "0")}</span> of ${TOTAL_FRAMES}`;
+
+  calCount.textContent = S.done + " / 5 shipped";
+
+  /* chrome: chapter, subtitles, progress */
+  chapEl.textContent = S.chapter;
+  chapEl.style.opacity = S.chapter ? 1 : 0;
   let sub = "", a = 0;
-  for (const [id, ln] of lineList) {
+  for (const ln of lineList) {
     if (t >= ln.start - 0.25 && t <= ln.end + 0.35) {
       sub = ln.text;
-      a = Math.min(seg(t, ln.start - 0.25, ln.start + 0.05), 1 - seg(t, ln.end + 0.1, ln.end + 0.35));
+      a = Math.min(lin(t, ln.start - 0.25, ln.start + 0.05), 1 - lin(t, ln.end + 0.1, ln.end + 0.35));
     }
   }
   subEl.textContent = sub;
   subEl.style.opacity = cl(a);
-
-  progEl.style.width = (t / DUR) * 100 + "%";
-};
-
-// the no-node fallback path drives the page by URL hash
-function fromHash() {
-  const h = parseFloat(location.hash.slice(1));
-  window.renderFrame(isNaN(h) ? 0 : h);
+  progBar.style.width = (t / DUR) * 100 + "%";
 }
+
+/* ===========================================================================
+   The contract with the renderer. seek() is the whole engine: move the paused
+   timeline's playhead, hand GSAP the one transform the ground owns, apply the
+   ground, then the handful of t-driven things. renderFrame(0..1) is what
+   render-frames.js calls; the URL hash is the no-node fallback.
+   ========================================================================= */
+window.seek = function (t) {
+  t = cl(t, 0, DUR);
+  tl.seek(t, true);                       /* true: suppress callbacks — nothing renders from inside a tween */
+  gsap.set(lockEl, { y: cur.lockY });
+  apply(cur);
+  post(t);
+};
+window.renderFrame = (u) => window.seek(cl(u, 0, 1) * DUR);
+function fromHash() { const h = parseFloat(location.hash.slice(1)); window.renderFrame(isNaN(h) ? 0 : h); }
 addEventListener("hashchange", fromHash);
 fromHash();
