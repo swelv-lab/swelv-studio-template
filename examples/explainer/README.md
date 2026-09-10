@@ -15,8 +15,10 @@ FAST=1 ./render.sh   # half frame rate, for checking a change
 
 This is the file to read if you want to know **how video is sequenced here**.
 `timeline.js` is written to be read top to bottom, and the film's fourth act
-explains itself on screen: the diagram it shows is this timeline, with its own
-playhead at the frame you are watching.
+explains itself on screen: the diagram it shows is this timeline, with four of
+its real tweens at their real positions. The playhead does what the renderer
+does — it *jumps* to each anchor, the tween runs, the frame that came back is
+shown — and then snaps to the frame you are actually watching.
 
 ## The five acts
 

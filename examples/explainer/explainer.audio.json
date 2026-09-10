@@ -373,63 +373,91 @@
   },
   {
    "type": "tone",
-   "time": 55.506,
+   "time": 55.406,
    "freq": 587.33,
-   "dur": 0.22,
-   "gain": 0.04
+   "dur": 0.2,
+   "gain": 0.038
   },
   {
    "type": "tone",
-   "time": 55.806,
+   "time": 55.626,
    "freq": 587.33,
-   "dur": 0.22,
-   "gain": 0.04
+   "dur": 0.2,
+   "gain": 0.038
   },
   {
    "type": "tone",
-   "time": 56.106,
+   "time": 55.846,
    "freq": 587.33,
-   "dur": 0.22,
-   "gain": 0.04
+   "dur": 0.2,
+   "gain": 0.038
   },
   {
    "type": "tone",
-   "time": 56.406,
+   "time": 56.066,
    "freq": 587.33,
-   "dur": 0.22,
-   "gain": 0.04
+   "dur": 0.2,
+   "gain": 0.038
+  },
+  {
+   "type": "tone",
+   "time": 57.006,
+   "freq": 783.99,
+   "dur": 0.14,
+   "gain": 0.05
+  },
+  {
+   "type": "tone",
+   "time": 58.106,
+   "freq": 783.99,
+   "dur": 0.14,
+   "gain": 0.05
+  },
+  {
+   "type": "tone",
+   "time": 59.206,
+   "freq": 783.99,
+   "dur": 0.14,
+   "gain": 0.05
+  },
+  {
+   "type": "tone",
+   "time": 60.306,
+   "freq": 783.99,
+   "dur": 0.14,
+   "gain": 0.05
   },
   {
    "type": "note",
-   "time": 56.806,
+   "time": 61.606,
    "freq": 293.66,
-   "dur": 0.32,
-   "gain": 0.045
+   "dur": 0.34,
+   "gain": 0.05
   },
   {
    "type": "tone",
-   "time": 65.216,
+   "time": 64.916,
    "freq": 783.99,
    "dur": 0.12,
    "gain": 0.034
   },
   {
    "type": "tone",
-   "time": 65.336,
+   "time": 65.036,
    "freq": 783.99,
    "dur": 0.12,
    "gain": 0.034
   },
   {
    "type": "tone",
-   "time": 65.456,
+   "time": 65.156,
    "freq": 783.99,
    "dur": 0.12,
    "gain": 0.034
   },
   {
    "type": "tone",
-   "time": 65.576,
+   "time": 65.276,
    "freq": 783.99,
    "dur": 0.12,
    "gain": 0.034

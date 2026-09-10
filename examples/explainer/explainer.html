@@ -161,12 +161,15 @@
 
       /* subtitles — the video has to work muted */
       #sub {
-        position:absolute; left:50%; transform:translateX(-50%); bottom:96px; width:1440px; text-align:center;
+        position:absolute; left:240px; bottom:96px; width:1440px; text-align:center;
         font-family:var(--sans); font-weight:500; font-size:35px; line-height:1.4; color:var(--fg); opacity:0;
       }
+      #sub span { -webkit-box-decoration-break:clone; box-decoration-break:clone }
       .stage[data-world="hand"]  #sub { font-size:44px; font-weight:500 }
       .stage[data-world="neon"]  #sub { font-family:"Share Tech Mono",monospace; font-size:33px; text-shadow:0 0 14px rgba(255,140,40,.9), 0 0 36px rgba(255,90,10,.5) }
-      .stage[data-world="press"] #sub { font-weight:700 }
+      .stage[data-world="press"] #sub { font-weight:700; line-height:1.5 }
+      /* a printed caption strip: the words are not laid over the halftone, they are printed on the stock */
+      .stage[data-world="press"] #sub span { background:#f2ece0; box-shadow:0 0 0 9px #f2ece0, -4px 5px 0 9px rgba(43,58,143,.28) }
       .stage[data-world="cel"]   #sub { font-weight:900; font-size:33px }
 
       /* =====================================================================
@@ -237,14 +240,17 @@
       .lane { position:relative; height:70px }
       .lane .tw { position:absolute; top:10px; height:44px; border-radius:var(--radius); background:var(--accent); color:var(--accent-ink);
                   display:flex; align-items:center; gap:14px; padding:0 16px; font-family:var(--mono); font-size:18px; white-space:nowrap; overflow:hidden }
-      .lane .tw b { font-weight:400; opacity:.75 }
+      .lane .tw i { position:absolute; inset:0; background:var(--fg); opacity:.55; transform-origin:0 50% }
+      .lane .thumb { position:absolute; top:6px }
+      .thumb { width:112px; height:64px; border:2px solid var(--line); background:var(--panel); overflow:hidden; flex:none }
+      .thumb svg { display:block; width:100%; height:100% }
       .lane .at { position:absolute; top:58px; font-size:14px; letter-spacing:.08em; color:var(--muted); white-space:nowrap }
       .ph { position:absolute; top:78px; bottom:64px; width:3px; background:var(--fg) }
       .ph::before { content:""; position:absolute; left:-7px; top:-10px; border:8px solid transparent; border-top:10px solid var(--fg) }
       .code { margin-top:10px; font-size:19px; color:var(--muted); letter-spacing:.02em }
       .code .o { color:var(--accent) }
       .wrow { display:flex; align-items:center; gap:18px; margin-top:26px; font-family:var(--mono); font-size:16px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted) }
-      .wsw { width:46px; height:46px; border:2px solid var(--line); border-radius:var(--radius) }
+      .wrow .thumb { width:96px; height:56px }
 
       .pill { font-family:var(--mono); font-size:20px; letter-spacing:0.08em; text-transform:uppercase; padding:15px 25px; border-radius:9px;
               border:1px solid var(--line); color:var(--muted); background:var(--panel); white-space:nowrap }
@@ -281,7 +287,7 @@
       .stage[data-world="press"] .tb { background-color:transparent;
         background-image:radial-gradient(circle, #2b3a8f 1.1px, transparent 1.4px); background-size:5px 5px; height:9px; opacity:.85 }
       .stage[data-world="press"] .big { font-weight:900 }
-      .stage[data-world="press"] .halftone { position:absolute; inset:52px 18px 18px;
+      .stage[data-world="press"] .halftone { position:absolute; inset:52px 18px 48px;
         background-image:radial-gradient(circle, #e8480a 1.6px, transparent 1.9px); background-size:7px 7px; opacity:.8 }
 
       .stage[data-world="cel"] .card, .stage[data-world="cel"] .tile { border:3px solid var(--line) }
