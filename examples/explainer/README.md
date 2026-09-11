@@ -1,12 +1,12 @@
 # The explainer
 
-A 95-second narrated explainer for the studio, **made with the studio** — and
+A two-minute narrated explainer for the studio, **made with the studio** — and
 cut the way the logo film is cut. Five acts, each set in a different way images
 have been made, joined by physical transitions rather than cross-fades. Same
 brand kit, same renderer, same procedural sound as any other video in this
 repo. The two things it adds are a voice track and GSAP.
 
-`rendered/swelv-studio-explainer.mp4` · 1920×1080 · 30fps · 88s of story + the 6.5s [ender](../ender/)
+`rendered/swelv-studio-explainer.mp4` · 1920×1080 · 30fps · ~106s of story + the 6.5s [ender](../ender/)
 
 ```bash
 ./render.sh          # the whole chain, about six minutes
@@ -24,9 +24,9 @@ shown — and then snaps to the frame you are actually watching.
 
 | Act | Material | Lines | What the material does |
 | --- | -------- | ----- | ---------------------- |
-| I   | **hand** — ink on paper | `hook` → `turn` | Everything is *written*: a clip wipe, left to right. The lockup is drawn by a pen. |
+| I   | **hand** — ink on paper | `hook` → `turn` | Everything is *written*: a clip wipe, left to right. The lockup is drawn by a pen. The brand interview, the one file, and the `reference/` shelf your own sources feed into. |
 | II  | **neon** — a CRT | `ask` → `iterate` | Everything *switches on*: a bright line that expands into a panel. A re-render is the slide switching off and on again. |
-| III | **press** — a duplicator | `print` → `essay` | Everything is *printed*: a blue plate lands, the orange lands a beat later, slightly off. A halftone prints in from the foot. |
+| III | **press** — a duplicator | `print` → `essay` | Everything is *printed*: a blue plate lands, the orange lands a beat later, slightly off. A halftone prints in from the foot. The deck act shows a rail of however many slides, a slide building itself, and the two ways it ships. |
 | IV  | **cel** — a painted cel | `video1` → `video4` | Everything is *cut*: a hard cut with a one-frame flash. The mountain rises; the flock crosses. |
 | V   | **brand** — the kit as shipped | `calendar` → `close` | Everything *rises*, the way the rest of the studio does. Then bare navy, and the ender. |
 

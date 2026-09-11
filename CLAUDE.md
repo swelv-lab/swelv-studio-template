@@ -90,7 +90,7 @@ to it.
 | `content/` | Essays: markdown → branded page + hero + share kit. See `content/README.md`. |
 | `calendar/` | The content board (HTML → PNG). See `calendar/README.md`. |
 | `examples/` | Finished work in the shipped brand, including the narrated explainer. **Never edit.** |
-| `reference/` | Optional, read-only copy of your real site source. See `docs/reference-folder.md`. |
+| `reference/` | Optional, read-only copy of your own sources — site, product docs, app. Ground claims here rather than from memory. See `docs/reference-folder.md`. |
 | `.claude/skills/` | The commands above. |
 
 ---

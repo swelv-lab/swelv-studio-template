@@ -86,7 +86,7 @@ const progBar = progEl.querySelector("i");
    ========================================================================= */
 const tl = gsap.timeline({ paused: true, defaults: { overwrite: false, lazy: false } });
 /* numbers post() reads — tweened here, applied there */
-const S = { type: 0, type2: 0, msg: 0, ph: 0, wp: 0, done: 0, chapter: "", live: 1, phT: 0 };
+const S = { type: 0, type2: 0, msg: 0, ph: 0, wp: 0, done: 0, chapter: "", live: 1, phT: 0, slides: 0, deckN: 0 };
 const world = (name, at) => tl.set(stage, { attr: { "data-world": name } }, at);
 
 /* ===========================================================================
@@ -291,9 +291,44 @@ scene("brand", L.brand1.start - 0.3, L.ask.start + 0.35, "your brand, once",
                   E("i", "tb", { top: "80px", width: "138px" }), E("i", "tb", { top: "106px", width: "158px" }), E("span", "tcap", {}, name));
       strip.appendChild(tile); return tile;
     });
-    stack.append(term, file, strip);
+    /* your own sources → one read-only folder the studio reads before it writes */
+    const ref = E("div", "", { gridArea: "1/1", display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" });
+    const srcRow = E("div", "srcs");
+    /* the label is INSIDE the element that gets written, or the clip that
+       writes the card eats a caption hanging below it */
+    const srcs = ["your site", "your docs", "your app"].map((lab) => {
+      const w = E("div", "src");
+      const c = E("div", "card");
+      c.append(E("i", "tl", { top: "18px", left: "18px", width: "58px", background: "var(--line)" }),
+               E("i", "tb", { top: "46px", left: "18px", width: "150px" }),
+               E("i", "tb", { top: "66px", left: "18px", width: "118px" }),
+               E("i", "tb", { top: "86px", left: "18px", width: "138px" }));
+      w.append(c, E("div", "cap", {}, lab));
+      srcRow.appendChild(w); return w;
+    });
+    const arrowSvg = SVG("svg", { viewBox: "0 0 840 128" });
+    Object.assign(arrowSvg.style, { width: "840px", height: "128px", display: "block", marginTop: "18px" });
+    const arrows = [118, 420, 722].map((x) => {
+      const p = SVG("path", { d: `M ${x} 4 C ${x} 62, 420 56, 420 112`, stroke: "var(--accent)", "stroke-width": 3,
+                              fill: "none", "stroke-linecap": "round" });
+      arrowSvg.appendChild(p); return p;
+    });
+    const refbox = E("div", "card refbox");
+    refbox.append(E("div", "p", {}, "reference/"), E("div", "r", {}, "read-only"));
+    const right = E("div", "firstright", { marginTop: "10px" });
+    const tickSvg = SVG("svg", { viewBox: "0 0 40 40" });
+    Object.assign(tickSvg.style, { width: "40px", height: "40px" });
+    const tick = SVG("path", { d: "M 5 21 L 15 32 L 35 7", stroke: "var(--accent)", "stroke-width": 5, fill: "none",
+                               "stroke-linecap": "round", "stroke-linejoin": "round" });
+    tickSvg.appendChild(tick);
+    right.append(tickSvg, E("span", "", {}, "right the first time"));
+    ref.append(srcRow, arrowSvg, refbox, right);
+
+    stack.append(term, file, ref, strip);
     el.appendChild(stack);
-    return { term, lines, file, toks, tiles };
+    /* each line hides behind its own length so it can draw itself */
+    [...arrows, tick].forEach((p) => { const l = p.getTotalLength(); p.setAttribute("stroke-dasharray", l); p.setAttribute("stroke-dashoffset", l); });
+    return { term, lines, file, toks, tiles, ref, srcs, arrows, refbox, right, tick };
   },
   (r) => {
     const A = L.brand1.start, B = L.brand2.start;
@@ -309,11 +344,21 @@ scene("brand", L.brand1.start - 0.3, L.ask.start + 0.35, "your brand, once",
       gsap.set(sw, { scale: 0 });
       tl.to(sw, { scale: 1, duration: 0.35, ease: "back.out(2)" }, B + 1.2 + i * 0.4);
     });
-    /* "everything you make wears it" — the file gives way to the surfaces */
-    tl.to(r.file, { y: -520, opacity: 0, duration: 0.45, ease: "power3.in" }, B + 2.95);
+    /* "point it at your own sources" — the file steps aside for the shelf */
+    const G = L.ground.start;
+    tl.to(r.file, { y: -520, opacity: 0, duration: 0.45, ease: "power3.in" }, G - 0.45);
+    r.srcs.forEach((c, i) => write(c, G + 0.15 + i * 0.42, 0.45));
+    /* three sources, one folder: the arrows are drawn, not faded */
+    r.arrows.forEach((p, i) => tl.to(p, { attr: { "stroke-dashoffset": 0 }, duration: 0.55, ease: "power2.inOut" }, G + 1.55 + i * 0.18));
+    write(r.refbox, G + 2.15, 0.5);
+    /* "so you are not correcting the same thing every time" */
+    write(r.right.querySelector("span"), G + 6.15, 0.5);
+    tl.to(r.tick, { attr: { "stroke-dashoffset": 0 }, duration: 0.4, ease: "power2.out" }, G + 6.0);
+    /* the shelf lifts as the surfaces arrive */
+    tl.to(r.ref, { y: -560, opacity: 0, duration: 0.45, ease: "power3.in" }, L.turn.start - 1.15);
     gsap.set(r.tiles, { scale: 0.94, transformPerspective: 900, transformOrigin: "50% 50%" });
     r.tiles.forEach((tile, i) => {
-      const at = B + 3.15 + i * 0.16;
+      const at = L.turn.start - 0.95 + i * 0.16;
       write(tile, at, 0.5);
       tl.to(tile, { scale: 1, duration: 0.5, ease: RISE }, at)
         .set(tile.querySelector(".tl"), { background: "var(--accent)" }, at + 0.5)
@@ -384,38 +429,116 @@ scene("ask", L.ask.start - 0.2, T2 + 0.4, "just ask",
 /* ---------------------------------------------------------------------------
    ACT III · PRESS — a duplicator. Decks and long-form, printed in two plates.
    --------------------------------------------------------------------------- */
-const slideFill = (c) => c.append(
-  E("i", "tl", { top: "20px", left: "20px", width: "50px" }),
-  E("i", "tb", { top: "48px", left: "20px", width: "158px", height: "11px", background: "var(--fg)" }),
-  E("i", "tb", { top: "70px", left: "20px", width: "112px" }));
+let deckRefs;
+/* one slide's furniture, the way a deck in this repo is actually built: a
+   kicker, a headline, a lead, then the figures. present.py animates a deck by
+   building exactly these, in this order — no slide contains animation code —
+   so the build shown here is the build you get for free. */
+function deckSlide(card, kicker, title, lead) {
+  const k = E("div", "mono skicker", {}, kicker);
+  const t = E("div", "stitle", {}, title);
+  const l = E("div", "slead", {}, lead);
+  const band = E("div", "statband");
+  card.append(k, t, l, band);
+  return { k, t, l, band };
+}
 
 scene("deck", T2 + 0.25, L.essay.start + 0.35, "decks",
   (el) => {
-    const holder = E("div", "", { position: "relative", width: "1180px", height: "460px" });
-    const sheets = [];
-    for (let i = 0; i < 7; i++) {
-      const sh = sheet(304, 172, { position: "absolute", left: "50%", top: "90px", marginLeft: "-152px", transformOrigin: "50% 120%", zIndex: 10 - Math.abs(i - 3) }, slideFill);
-      holder.appendChild(sh.el); sheets.push(sh);
+    const wrap = E("div", "", { display: "flex", flexDirection: "column", alignItems: "center", gap: "30px" });
+
+    /* THE SLIDE — one sheet, two slides' worth of content stacked on it */
+    const big = sheet(908, 512, {}, (c) => { c.style.cssText += "display:grid"; }, false);
+    const a = E("div", "sfill"), b = E("div", "sfill");
+    big.card.append(a, b);
+    const A = deckSlide(a, "example deck &middot; 04", "A slide that builds itself",
+                        "Kicker, headline, lead, then the figures &mdash; in that order, every time.");
+    /* A's figures are a chart, so the motion is a shape growing rather than a
+       claim: four columns, no numbers to misread */
+    const cols = ["Q1", "Q2", "Q3", "Q4"].map((q, i) => {
+      const cell = E("div", "col");
+      const bar = E("i", "", { height: "6px" });
+      cell.append(bar, E("span", "mono", {}, q));
+      A.band.appendChild(cell);
+      return bar;
+    });
+    const B = deckSlide(b, "example deck &middot; 05", "Then the next one, the same way",
+                        "The build is generic. It comes off the slide furniture every deck here shares.");
+    /* B's figures are facts about the deck itself — nothing to get wrong */
+    const stats = [["24", "slides"], ["0", "lines of animation"], ["3", "ways to ship"]].map(([n, lab]) => {
+      const cell = E("div", "stat");
+      const num = E("div", "n", {}, "0");
+      cell.append(num, E("div", "mono l", {}, lab));
+      B.band.appendChild(cell);
+      return { num, to: parseInt(n, 10) };
+    });
+
+    /* THE DECK — a rail of sheets that runs off the frame, because the number
+       of slides is whatever you wrote */
+    const railWrap = E("div", "", { position: "relative", width: "1660px", height: "76px", overflow: "hidden", flex: "none" });
+    const rail = E("div", "", { position: "absolute", left: "0", top: "0", display: "flex", gap: "12px" });
+    const minis = [];
+    for (let i = 0; i < 24; i++) {
+      const sh = sheet(104, 58, { flex: "none" }, (c) => c.append(
+        E("i", "tl", { top: "10px", left: "10px", width: "22px", height: "5px" }),
+        E("i", "tb", { top: "24px", left: "10px", width: "58px", height: "5px", background: "var(--fg)" }),
+        E("i", "tb", { top: "36px", left: "10px", width: "40px", height: "4px" })));
+      rail.appendChild(sh.el); minis.push(sh);
     }
-    const stamp = E("div", "stamp", { left: "50%", top: "150px", marginLeft: "-230px", opacity: 0, zIndex: 20 }, "PDF &middot; 7 slides");
-    holder.appendChild(stamp);
-    el.appendChild(holder);
-    return { holder, sheets, stamp };
+    railWrap.appendChild(rail);
+    const count = E("div", "mono dcount", {}, "0 slides");
+
+    /* THE OUTPUTS — the same deck, two ways off the press */
+    /* stamped onto the sheet itself, the way a press marks what a run is for */
+    const stamps = [["deck.pdf", "-236px", "auto", "-7deg"], ["deck.mp4", "auto", "-236px", "5deg"]].map(([n, l, r2, rot]) => {
+      const st = E("div", "stamp", { opacity: 0, fontSize: "30px", padding: "9px 20px", bottom: "96px", left: l, right: r2, zIndex: 20 }, n);
+      big.el.appendChild(st); return st;
+    });
+
+    wrap.append(big.el, count, railWrap);
+    el.append(wrap);
+    deckRefs = { count, stats };
+    return { big, a, b, A, B, cols, stats, rail, minis, count, stamps, railWrap };
   },
   (r) => {
-    const P = L.print.start;
-    /* "seven slides": each is printed — blue plate, then orange — then they
-       fan out, then they collapse to one and the stamp lands on it */
-    r.sheets.forEach((sh, i) => {
-      const k = i - 3;
-      print(sh, P + 0.05 + i * 0.09);
-      tl.to(sh.el, { x: k * 218, rotation: k * 5.5, duration: 1.1, ease: RISE }, P + 1.0)
-        .to(sh.el, { x: 0, rotation: 0, scale: 0.9, opacity: 0.18, duration: 0.8, ease: "power2.inOut" }, P + 2.7);
+    const P = L.print.start, D = L.deckplay.start;
+    /* "however many slides you need" — they print along the rail and keep
+       going past the edge of the frame; the count runs with them */
+    print(r.big, P + 0.05);
+    gsap.set(r.b, { opacity: 0 });
+    r.minis.forEach((sh, i) => print(sh, P + 0.55 + i * 0.055));
+    tl.fromTo(S, { slides: 0 }, { slides: 24, duration: 1.5, ease: "none" }, P + 0.6);
+    /* the rail keeps running: more slides than the frame can hold */
+    tl.to(r.rail, { x: -540, duration: 2.4, ease: "power2.inOut" }, P + 1.6);
+
+    /* "the same slides present themselves" — slide 4 builds, element by
+       element, straight off the furniture above */
+    const mark = (i, at) => tl.set(r.minis[i].card, { borderColor: "var(--accent)", background: "var(--accent-soft)" }, at)
+      .to(r.minis[i].el, { scale: 1.14, duration: 0.22, ease: "back.out(2)" }, at)
+      .to(r.minis[i].el, { scale: 1, duration: 0.2 }, at + 1.9);
+    write(r.A.k, D + 0.15, 0.35);
+    write(r.A.t, D + 0.5, 0.55);
+    write(r.A.l, D + 1.05, 0.5);
+    mark(3, D + 0.1);
+    r.cols.forEach((bar, i) => tl.to(bar, { height: [96, 62, 128, 158][i], duration: 0.55, ease: "power3.out" }, D + 1.5 + i * 0.14));
+    /* the deck moves on: slide 4 is pulled, slide 5 prints and builds the same way */
+    tl.to(r.a, { y: -520, opacity: 0, duration: 0.34, ease: "power3.in" }, D + 3.5)
+      .set(r.b, { opacity: 1 }, D + 3.8);
+    mark(4, D + 3.8);
+    tl.to(r.rail, { x: -656, duration: 0.4, ease: "power3.out" }, D + 3.8);
+    write(r.B.k, D + 3.9, 0.35);
+    write(r.B.t, D + 4.2, 0.55);
+    write(r.B.l, D + 4.75, 0.5);
+    /* the figures count — the one move a printed page can never make */
+    tl.fromTo(S, { deckN: 0 }, { deckN: 1, duration: 1.1, ease: "power2.out" }, D + 5.2);
+    /* "send the PDF, or send the film" — both come off the same sheet */
+    tl.to(r.count, { opacity: 0, duration: 0.25 }, D + 6.35);
+    r.stamps.forEach((st, i) => {
+      gsap.set(st, { scale: 1.8, rotation: i ? 9 : -11 });
+      tl.to(st, { opacity: 1, scale: 1, rotation: i ? 5 : -7, duration: 0.18, ease: "power3.in" }, D + 6.55 + i * 0.45);
     });
-    gsap.set(r.stamp, { scale: 1.9, rotation: -16 });
-    tl.to(r.stamp, { opacity: 1, scale: 1, rotation: -8, duration: 0.2, ease: "power3.in" }, P + 3.35);
     /* fed out to the left as the next sheet comes through */
-    tl.to(r.holder, { x: -1700, duration: 0.5, ease: "power3.in" }, L.essay.start - 0.25);
+    tl.to([r.big.el, r.railWrap, r.count, ...r.stamps], { x: -2100, duration: 0.5, ease: "power3.in", stagger: 0.03 }, L.essay.start - 0.25);
   });
 
 scene("essay", L.essay.start - 0.2, T3 + 0.5, "long-form",
@@ -852,6 +975,11 @@ function post(t) {
   vid.code.innerHTML = `window.renderFrame(${(fr / TOTAL_FRAMES).toFixed(4)}) &nbsp;&rarr;&nbsp; tl.seek(${(fr / FPS).toFixed(2)}) &nbsp;&middot;&nbsp; <span class="o">frame ${String(fr).padStart(4, "0")}</span> of ${TOTAL_FRAMES}`;
 
   calCount.textContent = S.done + " / 5 shipped";
+
+  /* the deck: the slide count as the rail prints, and the figures counting on
+     slide five — a page that can do this is not a PDF */
+  deckRefs.count.textContent = Math.round(S.slides) + " slides";
+  deckRefs.stats.forEach((st) => { st.num.textContent = Math.round(st.to * S.deckN); });
 
   /* chrome: chapter, subtitles, progress */
   chapEl.textContent = S.chapter;

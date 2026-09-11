@@ -152,7 +152,7 @@ studio/
 ├── content/         Essays: markdown → branded page + hero + share kit
 ├── calendar/        The content board
 ├── examples/        Finished work, made with this studio (read-only)
-├── reference/       Optional: a read-only copy of your site, so content can match it
+├── reference/       Optional: a read-only copy of your site, docs and app, so content matches
 └── .claude/skills/  The commands above
 ```
 

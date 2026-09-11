@@ -207,6 +207,18 @@
       .tokrow .sw { width:30px; height:30px; border-radius:6px; border:1px solid var(--line) }
 
       .tile { border:1px solid var(--line); border-radius:10px; background:var(--panel); position:relative }
+
+      /* the reference shelf — your own sources, read-only, so the studio reads
+         the truth instead of approximating it */
+      .srcs { display:flex; gap:34px; align-items:flex-start }
+      .src { width:236px; position:relative }
+      .src .card { height:126px; position:relative }
+      .src .cap { margin-top:14px; text-align:center; font-family:var(--mono); font-size:15px; letter-spacing:.14em; text-transform:uppercase; color:var(--faint) }
+      .stage[data-world="hand"] .src .cap { font-size:22px; letter-spacing:.02em; text-transform:none }
+      .refbox { display:flex; flex-direction:column; align-items:center; gap:6px; padding:18px 44px }
+      .refbox .p { font-family:var(--mono); font-size:34px; color:var(--accent) }
+      .refbox .r { font-family:var(--mono); font-size:19px; color:var(--faint); letter-spacing:.08em }
+      .firstright { display:flex; align-items:center; gap:14px; font-family:var(--sans); font-size:34px; color:var(--muted) }
       /* content bars: GLOBAL on purpose — slides, deck cards, essay cards and
          the week strip all draw their fake content with these */
       .tl { position:absolute; left:14px; top:13px; height:8px; border-radius:4px; background:var(--accent) }
@@ -224,6 +236,24 @@
       .sheet .plate .tl, .sheet .plate .tb { background:#2b3a8f }
       .stamp { position:absolute; font-family:var(--mono); font-size:44px; letter-spacing:.14em; text-transform:uppercase; color:#e8480a;
                border:5px solid #e8480a; border-radius:8px; padding:10px 26px; mix-blend-mode:multiply; white-space:nowrap }
+
+      /* a real slide, with the furniture a deck in this repo is built from.
+         present.py animates a deck by building exactly these in order, so this
+         is the build you get without writing any animation. overflow:hidden is
+         not decoration — a slide that spills is a slide that lies about 16:9. */
+      .sfill { grid-area:1/1; padding:38px 46px; display:flex; flex-direction:column; align-items:flex-start; overflow:hidden }
+      .skicker { font-size:19px; letter-spacing:.22em; text-transform:uppercase; color:var(--muted) }
+      .stitle { font-family:var(--sans); font-weight:900; font-size:50px; line-height:1.06; letter-spacing:-0.03em; color:var(--fg); margin-top:12px }
+      .slead { font-family:var(--sans); font-weight:500; font-size:23px; line-height:1.4; color:var(--muted); margin-top:14px; max-width:46ch }
+      .statband { display:flex; align-items:flex-end; gap:40px; margin-top:auto; width:100%; height:186px }
+      .statband .col { display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:9px; flex:1; height:100% }
+      .statband .col i { display:block; width:100%; background:var(--accent) }
+      .statband .col span { font-size:16px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted) }
+      .statband .stat { flex:1; display:flex; flex-direction:column; justify-content:flex-end; padding-bottom:6px }
+      .statband .stat .n { font-family:var(--sans); font-weight:900; font-size:62px; line-height:1; color:var(--accent) }
+      .statband .stat .l { font-size:16px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-top:8px }
+      .dcount { font-size:22px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); align-self:flex-end; margin:-8px 4px -6px 0 }
+
 
       #strip { display:flex; gap:10px }
       #strip .fr { width:152px; height:152px; border-radius:8px; border:1px solid var(--line); background:var(--panel); position:relative; overflow:hidden }
